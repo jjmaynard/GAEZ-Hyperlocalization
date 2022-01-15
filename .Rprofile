@@ -1,16 +1,8 @@
-cat(crayon::bold('
-This project was set up by rrtools.
-'))
-cat('
-You can start working now or apply some more basic configuration.
-')
-cat('Check out ')
-cat(crayon::underline('https://github.com/benmarwick/rrtools'))
-cat(' for an explanation of all the project configuration functions of rrtools.
-')
-cat('Or run the rrtools configuration addin: ')
-cat(crayon::cyan('rrtools.addin::rrtools_assistant() '))
-cat(crayon::underline('https://github.com/nevrome/rrtools.addin
-
-'))
-invisible(file.remove('.Rprofile'))
+## This makes sure that R loads the workflowr package
+## automatically, everytime the project is loaded
+if (requireNamespace("workflowr", quietly = TRUE)) {
+  message("Loading .Rprofile for the current workflowr project")
+  library("workflowr")
+} else {
+  message("workflowr package not installed, please run install.packages(\"workflowr\") to use the workflowr functions")
+}

@@ -1,0 +1,145 @@
+---
+title: "GAEZ Hyper-localization"
+output: html_notebook
+---
+
+Steps to create R projects:
+1.	Navigate to directory that will host the project folder.
+2.	In R, load ‘rrtools’ and ‘workflowr’
+3.	Run ‘rrtools’ code to create research compendium:
+a.	rrtools::use_compendium("myproject ")
+b.	usethis::use_mit_license(name = "Jonathan J Maynard")
+c.	usethis::use_git()
+d.	Create github ‘repo’ token for “myproject”: gitcreds::gitcreds_set() -- set new token created on GitHub website
+e.	usethis::use_github()
+f.	rrtools::use_readme_rmd()
+g.	rrtools::use_analysis()
+h.	rename the ‘analysis’ folder to ‘report’
+i.	rrtools::use_dockerfile()
+j.	rrtools::use_travis()
+4.	Run ‘workflowr’ code to create research website
+a.	wflow_start("myproject_site")
+b.	wflow_build() and wflow_view() to build and view website
+c.	wflow_publish(c("analysis/index.Rmd", "analysis/about.Rmd", "analysis/license.Rmd"), "Publish the initial files for myproject")
+d.	wflow_status() to check if docs have been published
+5.	Integreate rrtools folder and workflow folder:
+a.	Move items from "myproject_site" to "myproject "
+6.	Commit changes with Git and push to GitHub. All future changes can be pushed to
+
+# Modify this section for each new project
+```{r}
+# set project name and path
+name <- "GAEZ"
+path <- "C:/R_Drive/Data_Files/LPKS_Data/R_Projects/GAEZ"
+```
+
+```{r}
+# set workflowr name and path
+wflr_name <- paste0(name, "_site")
+wflr_path <- paste0(path, "/", wflr_name)
+```
+
+```{r}
+library(rrtools)
+library(workflowr)
+```
+
+# Add auth_token for project
+
+```{r}
+#setwd(path)
+rrtools::use_compendium(name)
+usethis::use_mit_license(copyright_holder = "Jonathan J Maynard")
+usethis::use_git()
+
+#Create github ‘repo’ token for “myproject”
+# create token
+usethis::create_github_token()
+# set token in storage
+#Token for GAEZ Hyperlocalization:
+gitcreds::gitcreds_set()
+usethis::use_github(protocol = "https", private = FALSE)
+
+rrtools::use_readme_rmd(pkg = path, render_readme = TRUE)
+rrtools::use_analysis(path)
+#rename the ‘analysis’ folder to ‘report’
+rrtools::use_dockerfile(path)
+
+
+```
+
+# Run workflowr code as chunk
+```{r}
+#Run ‘workflowr’ code to create research website
+wflow_start(wflr_path, git = FALSE)
+wflow_build() #to build  website
+wflow_view()  #view website
+```
+
+# Perform these steps for workflowr sub-folder
+  1. rename 'analysis' to 'site'
+  2. rename "site/about.Rmd" to "site/code.Rmd"
+  2. create new Rmarkdown file "site/data.Rmd"
+
+# Run workflowr code as chunk
+```{r}
+setwd(wflr_path)
+wflow_publish(c("site/index.Rmd", "site/code.Rmd", "site/data.Rmd", "site/license.Rmd"), "Publish the initial files for myproject")
+wflow_status() #to check if docs have been published
+```
+
+#Integreate rrtools folder and workflowr folder:
+Changes to rrtools folder (project folder):
+  1. erase rrtools .gitignore and .profile
+  2. rename analysis folder to 'results'
+  3. move results/data files to data/
+  4. erase R/ folder
+  5. Create 'proj_setup' folder and save Project_creation.Rmd script in this folder
+  6. move README.md in /output folder to data/derived/ and erase /output
+
+Changes to workflowr folder (sub project folder):
+  1. erase workflowr README.Rmd
+  2. move README.Rmd in data folder to rrtools data folder and erase data folder
+  3. erase workflowr Rproj file
+  4. move all files from workflowr folder to main project folder, then erase workflowr folder
+  5. add 'proj_setup/' to .gitignore
+
+Commit changes with Git and push to GitHub.
+In Github, set github project site to /docs in settings
+
+
+
+```{r}
+setwd(path)
+wflow_publish(c("site/index.Rmd", "site/code.Rmd", "site/data.Rmd", "site/license.Rmd"), "Publish the initial files for myproject")
+wflow_status() #to check if docs have been published
+```
+
+
+##Examples for making changes to project website with workflowr
+```{r}
+#Check if any docs have not yet been published
+wflow_status() 
+# single file
+wflow_publish("site/file.Rmd", "Informative commit message")
+# All tracked files that have been edited
+wflow_publish(all = TRUE, message = "Informative commit message")
+# A new file plus all tracked files that have been edited
+wflow_publish("site/file.Rmd", "Informative commit message", all = TRUE)
+# Multiple files
+wflow_publish(c("site/file.Rmd", "site/another.Rmd"),
+              "Informative commit message")
+# All R Markdown files that start with the pattern "new_"
+wflow_publish("site/new_*Rmd", "Informative commit message")
+# Republish all published files even though they haven't been modified.
+# Useful for changing some universal aspect of the site, e.g. the theme
+# specified in _site.yml.
+wflow_publish("site/_site.yml", "site update", republish = TRUE)
+# Publish all previously published files that have been committed more
+# recently than their corresponding HTML files. This is useful if you like to
+# manually commit your R Markdown files.
+wflow_publish(update = TRUE)
+
+wflow_publish("site/index.Rmd", all = TRUE, message = "Update index")
+wflow_publish("site/ESG_Covariate_Processing.Rmd", all = TRUE, message = "Update ESG covariate processing")
+```

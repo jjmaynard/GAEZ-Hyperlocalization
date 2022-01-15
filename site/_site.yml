@@ -1,0 +1,19 @@
+name: "GAEZ Hyperlocalization"
+output_dir: ../docs
+navbar:
+  title: "GAEZ Hyperlocalization"
+  left:
+  - text: About
+    href: index.html
+  - text: Code
+    href: code.html
+  - text: Data
+    href: data.html
+  - text: License
+    href: license.html
+output:
+  workflowr::wflow_html:
+    toc: yes
+    toc_float: yes
+    theme: cosmo
+    highlight: textmate
