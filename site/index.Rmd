@@ -1,5 +1,5 @@
 ---
-title: "About"
+title: "Overview"
 site: workflowr::wflow_site
 output:
   workflowr::wflow_html:
