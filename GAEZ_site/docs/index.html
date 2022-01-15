@@ -11,7 +11,7 @@
 
 
 
-<title>Home</title>
+<title>About</title>
 
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -249,10 +249,13 @@ $(document).ready(function () {
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="index.html">Home</a>
+  <a href="index.html">About</a>
 </li>
 <li>
-  <a href="about.html">About</a>
+  <a href="code.html">Code</a>
+</li>
+<li>
+  <a href="data.html">Data</a>
 </li>
 <li>
   <a href="license.html">License</a>
@@ -269,7 +272,7 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Home</h1>
+<h1 class="title toc-ignore">About</h1>
 
 </div>
 
@@ -325,16 +328,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomjjmaynardGAEZtree35d9773e4d7b62e19db30b04f1f31768baa8b503targetblank35d9773a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/jjmaynard/GAEZ/tree/35d9773e4d7b62e19db30b04f1f31768baa8b503" target="_blank">35d9773</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomjjmaynardGAEZtree8095806dc26565f5b678b47e746430bf0e90d022targetblank8095806a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/jjmaynard/GAEZ/tree/8095806dc26565f5b678b47e746430bf0e90d022" target="_blank">8095806</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomjjmaynardGAEZtree35d9773e4d7b62e19db30b04f1f31768baa8b503targetblank35d9773a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomjjmaynardGAEZtree8095806dc26565f5b678b47e746430bf0e90d022targetblank8095806a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/jjmaynard/GAEZ/tree/35d9773e4d7b62e19db30b04f1f31768baa8b503" target="_blank">35d9773</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/jjmaynard/GAEZ/tree/8095806dc26565f5b678b47e746430bf0e90d022" target="_blank">8095806</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -348,7 +351,16 @@ Untracked files:
     Untracked:  CONDUCT.md
     Untracked:  CONTRIBUTING.md
     Untracked:  Dockerfile
-    Untracked:  GAEZ_site/
+    Untracked:  GAEZ_site/.Rprofile
+    Untracked:  GAEZ_site/.gitattributes
+    Untracked:  GAEZ_site/.gitignore
+    Untracked:  GAEZ_site/GAEZ_site.Rproj
+    Untracked:  GAEZ_site/README.md
+    Untracked:  GAEZ_site/_workflowr.yml
+    Untracked:  GAEZ_site/code/
+    Untracked:  GAEZ_site/data/
+    Untracked:  GAEZ_site/output/
+    Untracked:  GAEZ_site/site/
     Untracked:  README.Rmd
     Untracked:  README.md
     Untracked:  analysis/
@@ -371,9 +383,52 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
+
 <p>
-There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>GAEZ_site/site/index.Rmd</code>) and HTML (<code>GAEZ_site/docs/index.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/jjmaynard/GAEZ/8095806dc26565f5b678b47e746430bf0e90d022/GAEZ_site/docs/index.html" target="_blank">8095806</a>
+</td>
+<td>
+jjmaynard
+</td>
+<td>
+2022-01-14
+</td>
+<td>
+Build site.
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
