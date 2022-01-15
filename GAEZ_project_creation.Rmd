@@ -52,7 +52,7 @@ rrtools::use_compendium(name)
 usethis::use_mit_license(name = "Jonathan J Maynard")
 usethis::use_git()
 #Create github ‘repo’ token for “myproject”
-usethis::use_github(auth_token = "b0606ae41c1a29d981421ab2e4100e45957cb5e0", protocol = "https", private = FALSE)
+usethis::use_github(auth_token = "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", protocol = "https", private = FALSE)
 rrtools::use_readme_rmd(pkg = path, render_readme = TRUE)
 rrtools::use_analysis(path)
 #rename the ‘analysis’ folder to ‘manuscript’

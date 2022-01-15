@@ -1752,48 +1752,88 @@ pre code {
 <h1>Modify this section for each new project</h1>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBzZXQgcHJvamVjdCBuYW1lIGFuZCBwYXRoXG5uYW1lIDwtIFwiR0FFWlwiXG5wYXRoIDwtIFwiQzovUl9Ecml2ZS9EYXRhX0ZpbGVzL0xQS1NfRGF0YS9SX1Byb2plY3RzL0dBRVpcIlxuYGBgIn0= -->
-<pre class="r"><code># set project name and path
-name &lt;- &quot;GAEZ&quot;
-path &lt;- &quot;C:/R_Drive/Data_Files/LPKS_Data/R_Projects/GAEZ&quot;</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBzZXQgd29ya2Zsb3dyIG5hbWUgYW5kIHBhdGhcbndmbHJfbmFtZSA8LSBwYXN0ZTAobmFtZSwgXCJfc2l0ZVwiKVxud2Zscl9wYXRoIDwtIHBhc3RlMChwYXRoLCBcIi9cIiwgd2Zscl9uYW1lKVxuYGBgIn0= -->
-<pre class="r"><code># set workflowr name and path
-wflr_name &lt;- paste0(name, &quot;_site&quot;)
-wflr_path &lt;- paste0(path, &quot;/&quot;, wflr_name)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShycnRvb2xzKVxubGlicmFyeSh3b3JrZmxvd3IpXG5gYGAifQ== -->
-<pre class="r"><code>library(rrtools)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuIyBzZXQgcHJvamVjdCBuYW1lIGFuZCBwYXRoXG5uYW1lIDwtIFxcR0FFWlxcXG5wYXRoIDwtIFxcQzovUl9Ecml2ZS9EYXRhX0ZpbGVzL0xQS1NfRGF0YS9SX1Byb2plY3RzL0dBRVpcXFxuYGBgXG5gYGAifQ== -->
+<pre class="r"><code>```r
+# set project name and path
+name &lt;- \GAEZ\
+path &lt;- \C:/R_Drive/Data_Files/LPKS_Data/R_Projects/GAEZ\</code></pre>
+<pre><code>
+&lt;!-- rnb-source-end --&gt;
+
+&lt;!-- rnb-chunk-end --&gt;
+
+
+&lt;!-- rnb-text-begin --&gt;
+
+
+
+&lt;!-- rnb-text-end --&gt;
+
+
+&lt;!-- rnb-chunk-begin --&gt;
+
+
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuIyBzZXQgd29ya2Zsb3dyIG5hbWUgYW5kIHBhdGhcbndmbHJfbmFtZSA8LSBwYXN0ZTAobmFtZSwgXFxfc2l0ZVxcKVxud2Zscl9wYXRoIDwtIHBhc3RlMChwYXRoLCBcXC9cXCwgd2Zscl9uYW1lKVxuYGBgXG5gYGAifQ== --&gt;
+
+```r
+```r
+# set workflowr name and path
+wflr_name &lt;- paste0(name, \_site\)
+wflr_path &lt;- paste0(path, \/\, wflr_name)</code></pre>
+<pre><code>
+&lt;!-- rnb-source-end --&gt;
+
+&lt;!-- rnb-chunk-end --&gt;
+
+
+&lt;!-- rnb-text-begin --&gt;
+
+
+
+&lt;!-- rnb-text-end --&gt;
+
+
+&lt;!-- rnb-chunk-begin --&gt;
+
+
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxubGlicmFyeShycnRvb2xzKVxubGlicmFyeSh3b3JrZmxvd3IpXG5gYGBcbmBgYCJ9 --&gt;
+
+```r
+```r
+library(rrtools)
 library(workflowr)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-</div>
-<div id="add-auth_token-for-project" class="section level1">
-<h1>Add auth_token for project</h1>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI3NldHdkKHBhdGgpXG5ycnRvb2xzOjp1c2VfY29tcGVuZGl1bShuYW1lKVxudXNldGhpczo6dXNlX21pdF9saWNlbnNlKG5hbWUgPSBcIkpvbmF0aGFuIEogTWF5bmFyZFwiKVxudXNldGhpczo6dXNlX2dpdCgpXG4jQ3JlYXRlIGdpdGh1YiDigJhyZXBv4oCZIHRva2VuIGZvciDigJxteXByb2plY3TigJ1cbnVzZXRoaXM6OnVzZV9naXRodWIoYXV0aF90b2tlbiA9IFwiYjA2MDZhZTQxYzFhMjlkOTgxNDIxYWIyZTQxMDBlNDU5NTdjYjVlMFwiLCBwcm90b2NvbCA9IFwiaHR0cHNcIiwgcHJpdmF0ZSA9IEZBTFNFKVxucnJ0b29sczo6dXNlX3JlYWRtZV9ybWQocGtnID0gcGF0aCwgcmVuZGVyX3JlYWRtZSA9IFRSVUUpXG5ycnRvb2xzOjp1c2VfYW5hbHlzaXMocGF0aClcbiNyZW5hbWUgdGhlIOKAmGFuYWx5c2lz4oCZIGZvbGRlciB0byDigJhtYW51c2NyaXB04oCZXG5ycnRvb2xzOjp1c2VfZG9ja2VyZmlsZShwYXRoKVxucnJ0b29sczo6dXNlX3RyYXZpcyhwYXRoKVxuYGBgIn0= -->
-<pre class="r"><code>#setwd(path)
-rrtools::use_compendium(name)
-usethis::use_mit_license(name = &quot;Jonathan J Maynard&quot;)
-usethis::use_git()
+<pre><code>
+&lt;!-- rnb-source-end --&gt;
+
+&lt;!-- rnb-chunk-end --&gt;
+
+
+&lt;!-- rnb-text-begin --&gt;
+
+
+# Add auth_token for project
+
+
+&lt;!-- rnb-text-end --&gt;
+
+
+&lt;!-- rnb-chunk-begin --&gt;
+
+
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI0NyZWF0ZSBnaXRodWIg4oCYcmVwb+KAmSB0b2tlbiBmb3Ig4oCcbXlwcm9qZWN04oCdXG51c2V0aGlzOjp1c2VfZ2l0aHViKGF1dGhfdG9rZW4gPSBcImdocF90SU85OGNmN2M4YTdCTGhlMk5pYVN4b28yRDdYMDExbDhMcDZcIiwgcHJvdG9jb2wgPSBcImh0dHBzXCIsIHByaXZhdGUgPSBGQUxTRSlcblxuYGBgIn0= --&gt;
+
+```r
 #Create github ‘repo’ token for “myproject”
-usethis::use_github(auth_token = &quot;b0606ae41c1a29d981421ab2e4100e45957cb5e0&quot;, protocol = &quot;https&quot;, private = FALSE)
-rrtools::use_readme_rmd(pkg = path, render_readme = TRUE)
-rrtools::use_analysis(path)
-#rename the ‘analysis’ folder to ‘manuscript’
-rrtools::use_dockerfile(path)
-rrtools::use_travis(path)</code></pre>
+usethis::use_github(auth_token = &quot;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&quot;, protocol = &quot;https&quot;, private = FALSE)
+</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiVGhlIGBhdXRoX3Rva2VuYCBhcmd1bWVudCBvZiBgdXNlX2dpdGh1YigpYCBpcyBkZXByZWNhdGVkIGFzIG9mIHVzZXRoaXMgMi4wLjAuXG51c2V0aGlzIG5vdyBkZWxlZ2F0ZXMgdG9rZW4gbG9va3VwIHRvIHRoZSBnaCBwYWNrYWdlLCB3aGljaCByZXRyaWV2ZXMgY3JlZGVudGlhbHMgYmFzZWQgb24gdGhlIHRhcmdldGVkIGhvc3QgVVJMLlxuVGhpcyBVUkwgaXMgZGV0ZXJtaW5lZCBieSB0aGUgY3VycmVudCBwcm9qZWN0J3MgR2l0IHJlbW90ZXMuXG5UaGUgXHUwMDFiWzkwbWBhdXRoX3Rva2VuYFx1MDAxYlszOW0gYXJndW1lbnQgaXMgaWdub3JlZCBhbmQgd2lsbCBldmVudHVhbGx5IGJlIHJlbW92ZWQuXHUwMDFiWzMybXZcdTAwMWJbMzltIFNldHRpbmcgYWN0aXZlIHByb2plY3QgdG8gXHUwMDFiWzM0bSdDOi9SX0RyaXZlL0RhdGFfRmlsZXMvTFBLU19EYXRhL1JfUHJvamVjdHMvR0FFWidcdTAwMWJbMzltXG5cdTAwMWJbMzJtdlx1MDAxYlszOW0gQ2hlY2tpbmcgdGhhdCBjdXJyZW50IGJyYW5jaCBpcyBkZWZhdWx0IGJyYW5jaCAoXHUwMDFiWzM0bSdtYXN0ZXInXHUwMDFiWzM5bSlcbiJ9 -->
+<pre><code>The `auth_token` argument of `use_github()` is deprecated as of usethis 2.0.0.
+usethis now delegates token lookup to the gh package, which retrieves credentials based on the targeted host URL.
+This URL is determined by the current project&#39;s Git remotes.
+The [90m`auth_token`[39m argument is ignored and will eventually be removed.[32mv[39m Setting active project to [34m&#39;C:/R_Drive/Data_Files/LPKS_Data/R_Projects/GAEZ&#39;[39m
+[32mv[39m Checking that current branch is default branch ([34m&#39;master&#39;[39m)</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
@@ -1801,80 +1841,138 @@ rrtools::use_travis(path)</code></pre>
 <h1>Run workflowr code as chunk</h1>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI1J1biDigJh3b3JrZmxvd3LigJkgY29kZSB0byBjcmVhdGUgcmVzZWFyY2ggd2Vic2l0ZVxud2Zsb3dfc3RhcnQod2Zscl9wYXRoLCBnaXQgPSBGQUxTRSlcbndmbG93X2J1aWxkKCkgI3RvIGJ1aWxkICB3ZWJzaXRlXG53Zmxvd192aWV3KCkgICN2aWV3IHdlYnNpdGVcbmBgYCJ9 -->
-<pre class="r"><code>#Run ‘workflowr’ code to create research website
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuI1J1biDDouKCrMucd29ya2Zsb3dyw6LigqzihKIgY29kZSB0byBjcmVhdGUgcmVzZWFyY2ggd2Vic2l0ZVxud2Zsb3dfc3RhcnQod2Zscl9wYXRoLCBnaXQgPSBGQUxTRSlcbndmbG93X2J1aWxkKCkgI3RvIGJ1aWxkICB3ZWJzaXRlXG53Zmxvd192aWV3KCkgICN2aWV3IHdlYnNpdGVcbmBgYFxuYGBgIn0= -->
+<pre class="r"><code>```r
+#Run â€˜workflowrâ€™ code to create research website
 wflow_start(wflr_path, git = FALSE)
 wflow_build() #to build  website
 wflow_view()  #view website</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-</div>
-<div id="perform-these-steps" class="section level1">
-<h1>Perform these steps</h1>
-<ol style="list-style-type: decimal">
-<li>rename “analysis/about.Rmd” to “analysis/code.Rmd”</li>
-<li>create new Rmarkdown file “analysis/data.Rmd”</li>
-</ol>
-</div>
-<div id="run-workflowr-code-as-chunk-1" class="section level1">
-<h1>Run workflowr code as chunk</h1>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2V0d2Qod2Zscl9wYXRoKVxud2Zsb3dfcHVibGlzaChjKFwiYW5hbHlzaXMvaW5kZXguUm1kXCIsIFwiYW5hbHlzaXMvY29kZS5SbWRcIiwgXCJhbmFseXNpcy9kYXRhLlJtZFwiLCBcImFuYWx5c2lzL2xpY2Vuc2UuUm1kXCIpLCBcIlB1Ymxpc2ggdGhlIGluaXRpYWwgZmlsZXMgZm9yIG15cHJvamVjdFwiKVxud2Zsb3dfc3RhdHVzKCkgI3RvIGNoZWNrIGlmIGRvY3MgaGF2ZSBiZWVuIHB1Ymxpc2hlZFxuYGBgIn0= -->
-<pre class="r"><code>setwd(wflr_path)
-wflow_publish(c(&quot;analysis/index.Rmd&quot;, &quot;analysis/code.Rmd&quot;, &quot;analysis/data.Rmd&quot;, &quot;analysis/license.Rmd&quot;), &quot;Publish the initial files for myproject&quot;)
+<pre><code>
+&lt;!-- rnb-source-end --&gt;
+
+&lt;!-- rnb-chunk-end --&gt;
+
+
+&lt;!-- rnb-text-begin --&gt;
+
+
+# Perform these steps
+  1. rename &quot;analysis/about.Rmd&quot; to &quot;analysis/code.Rmd&quot;
+  2. create new Rmarkdown file &quot;analysis/data.Rmd&quot;
+
+# Run workflowr code as chunk
+
+&lt;!-- rnb-text-end --&gt;
+
+
+&lt;!-- rnb-chunk-begin --&gt;
+
+
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuc2V0d2Qod2Zscl9wYXRoKVxud2Zsb3dfcHVibGlzaChjKFxcYW5hbHlzaXMvaW5kZXguUm1kXFwsIFxcYW5hbHlzaXMvY29kZS5SbWRcXCwgXFxhbmFseXNpcy9kYXRhLlJtZFxcLCBcXGFuYWx5c2lzL2xpY2Vuc2UuUm1kXFwpLCBcXFB1Ymxpc2ggdGhlIGluaXRpYWwgZmlsZXMgZm9yIG15cHJvamVjdFxcKVxud2Zsb3dfc3RhdHVzKCkgI3RvIGNoZWNrIGlmIGRvY3MgaGF2ZSBiZWVuIHB1Ymxpc2hlZFxuYGBgXG5gYGAifQ== --&gt;
+
+```r
+```r
+setwd(wflr_path)
+wflow_publish(c(\analysis/index.Rmd\, \analysis/code.Rmd\, \analysis/data.Rmd\, \analysis/license.Rmd\), \Publish the initial files for myproject\)
 wflow_status() #to check if docs have been published</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>#Integreate rrtools folder and workflowr folder: Changes to rrtools folder (project folder): 1. erase rrtools .gitignore and .profile 2. rename analysis folder to ‘results’ 3. move results/data files to data/ 4. erase R/ folder 5. Create ‘proj_setup’ folder and save Project_creation.Rmd script in this folder 6. move README.md in /output folder to data/derived/ and erase /output</p>
-<p>Changes to workflowr folder (sub project folder): 1. erase workflowr README.Rmd 2. move README.Rmd in data folder to rrtools data folder and erase data folder 3. erase workflowr Rproj file 4. move all files from workflowr folder to main project folder, then erase workflowr folder 5. add ‘proj_setup/’ to .gitignore</p>
-<p>Commit changes with Git and push to GitHub. In Github, set github project site to /docs in settings</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2V0d2QocGF0aClcbndmbG93X3B1Ymxpc2goYyhcImFuYWx5c2lzL2luZGV4LlJtZFwiLCBcImFuYWx5c2lzL2NvZGUuUm1kXCIsIFwiYW5hbHlzaXMvZGF0YS5SbWRcIiwgXCJhbmFseXNpcy9saWNlbnNlLlJtZFwiKSwgXCJQdWJsaXNoIHRoZSBpbml0aWFsIGZpbGVzIGZvciBteXByb2plY3RcIilcbndmbG93X3N0YXR1cygpICN0byBjaGVjayBpZiBkb2NzIGhhdmUgYmVlbiBwdWJsaXNoZWRcbmBgYCJ9 -->
-<pre class="r"><code>setwd(path)
-wflow_publish(c(&quot;analysis/index.Rmd&quot;, &quot;analysis/code.Rmd&quot;, &quot;analysis/data.Rmd&quot;, &quot;analysis/license.Rmd&quot;), &quot;Publish the initial files for myproject&quot;)
+<pre><code>
+&lt;!-- rnb-source-end --&gt;
+
+&lt;!-- rnb-chunk-end --&gt;
+
+
+&lt;!-- rnb-text-begin --&gt;
+
+
+#Integreate rrtools folder and workflowr folder:
+Changes to rrtools folder (project folder):
+  1. erase rrtools .gitignore and .profile
+  2. rename analysis folder to &#39;results&#39;
+  3. move results/data files to data/
+  4. erase R/ folder
+  5. Create &#39;proj_setup&#39; folder and save Project_creation.Rmd script in this folder
+  6. move README.md in /output folder to data/derived/ and erase /output
+
+Changes to workflowr folder (sub project folder):
+  1. erase workflowr README.Rmd
+  2. move README.Rmd in data folder to rrtools data folder and erase data folder
+  3. erase workflowr Rproj file
+  4. move all files from workflowr folder to main project folder, then erase workflowr folder
+  5. add &#39;proj_setup/&#39; to .gitignore
+
+Commit changes with Git and push to GitHub.
+In Github, set github project site to /docs in settings
+
+
+
+
+&lt;!-- rnb-text-end --&gt;
+
+
+&lt;!-- rnb-chunk-begin --&gt;
+
+
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuc2V0d2QocGF0aClcbndmbG93X3B1Ymxpc2goYyhcXGFuYWx5c2lzL2luZGV4LlJtZFxcLCBcXGFuYWx5c2lzL2NvZGUuUm1kXFwsIFxcYW5hbHlzaXMvZGF0YS5SbWRcXCwgXFxhbmFseXNpcy9saWNlbnNlLlJtZFxcKSwgXFxQdWJsaXNoIHRoZSBpbml0aWFsIGZpbGVzIGZvciBteXByb2plY3RcXClcbndmbG93X3N0YXR1cygpICN0byBjaGVjayBpZiBkb2NzIGhhdmUgYmVlbiBwdWJsaXNoZWRcbmBgYFxuYGBgIn0= --&gt;
+
+```r
+```r
+setwd(path)
+wflow_publish(c(\analysis/index.Rmd\, \analysis/code.Rmd\, \analysis/data.Rmd\, \analysis/license.Rmd\), \Publish the initial files for myproject\)
 wflow_status() #to check if docs have been published</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>##Examples for making changes to project website with workflowr</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI0NoZWNrIGlmIGFueSBkb2NzIGhhdmUgbm90IHlldCBiZWVuIHB1Ymxpc2hlZFxud2Zsb3dfc3RhdHVzKCkgXG4jIHNpbmdsZSBmaWxlXG53Zmxvd19wdWJsaXNoKFwiYW5hbHlzaXMvZmlsZS5SbWRcIiwgXCJJbmZvcm1hdGl2ZSBjb21taXQgbWVzc2FnZVwiKVxuIyBBbGwgdHJhY2tlZCBmaWxlcyB0aGF0IGhhdmUgYmVlbiBlZGl0ZWRcbndmbG93X3B1Ymxpc2goYWxsID0gVFJVRSwgbWVzc2FnZSA9IFwiSW5mb3JtYXRpdmUgY29tbWl0IG1lc3NhZ2VcIilcbiMgQSBuZXcgZmlsZSBwbHVzIGFsbCB0cmFja2VkIGZpbGVzIHRoYXQgaGF2ZSBiZWVuIGVkaXRlZFxud2Zsb3dfcHVibGlzaChcImFuYWx5c2lzL2ZpbGUuUm1kXCIsIFwiSW5mb3JtYXRpdmUgY29tbWl0IG1lc3NhZ2VcIiwgYWxsID0gVFJVRSlcbiMgTXVsdGlwbGUgZmlsZXNcbndmbG93X3B1Ymxpc2goYyhcImFuYWx5c2lzL2ZpbGUuUm1kXCIsIFwiYW5hbHlzaXMvYW5vdGhlci5SbWRcIiksXG4gICAgICAgICAgICAgIFwiSW5mb3JtYXRpdmUgY29tbWl0IG1lc3NhZ2VcIilcbiMgQWxsIFIgTWFya2Rvd24gZmlsZXMgdGhhdCBzdGFydCB3aXRoIHRoZSBwYXR0ZXJuIFwibmV3X1wiXG53Zmxvd19wdWJsaXNoKFwiYW5hbHlzaXMvbmV3XypSbWRcIiwgXCJJbmZvcm1hdGl2ZSBjb21taXQgbWVzc2FnZVwiKVxuIyBSZXB1Ymxpc2ggYWxsIHB1Ymxpc2hlZCBmaWxlcyBldmVuIHRob3VnaCB0aGV5IGhhdmVuJ3QgYmVlbiBtb2RpZmllZC5cbiMgVXNlZnVsIGZvciBjaGFuZ2luZyBzb21lIHVuaXZlcnNhbCBhc3BlY3Qgb2YgdGhlIHNpdGUsIGUuZy4gdGhlIHRoZW1lXG4jIHNwZWNpZmllZCBpbiBfc2l0ZS55bWwuXG53Zmxvd19wdWJsaXNoKFwiYW5hbHlzaXMvX3NpdGUueW1sXCIsIFwic2l0ZSB1cGRhdGVcIiwgcmVwdWJsaXNoID0gVFJVRSlcbiMgUHVibGlzaCBhbGwgcHJldmlvdXNseSBwdWJsaXNoZWQgZmlsZXMgdGhhdCBoYXZlIGJlZW4gY29tbWl0dGVkIG1vcmVcbiMgcmVjZW50bHkgdGhhbiB0aGVpciBjb3JyZXNwb25kaW5nIEhUTUwgZmlsZXMuIFRoaXMgaXMgdXNlZnVsIGlmIHlvdSBsaWtlIHRvXG4jIG1hbnVhbGx5IGNvbW1pdCB5b3VyIFIgTWFya2Rvd24gZmlsZXMuXG53Zmxvd19wdWJsaXNoKHVwZGF0ZSA9IFRSVUUpXG5cbndmbG93X3B1Ymxpc2goXCJhbmFseXNpcy9pbmRleC5SbWRcIiwgYWxsID0gVFJVRSwgbWVzc2FnZSA9IFwiVXBkYXRlIGluZGV4XCIpXG53Zmxvd19wdWJsaXNoKFwiYW5hbHlzaXMvRVNHX0NvdmFyaWF0ZV9Qcm9jZXNzaW5nLlJtZFwiLCBhbGwgPSBUUlVFLCBtZXNzYWdlID0gXCJVcGRhdGUgRVNHIGNvdmFyaWF0ZSBwcm9jZXNzaW5nXCIpXG5gYGAifQ== -->
-<pre class="r"><code>#Check if any docs have not yet been published
+<pre><code>
+&lt;!-- rnb-source-end --&gt;
+
+&lt;!-- rnb-chunk-end --&gt;
+
+
+&lt;!-- rnb-text-begin --&gt;
+
+
+
+##Examples for making changes to project website with workflowr
+
+&lt;!-- rnb-text-end --&gt;
+
+
+&lt;!-- rnb-chunk-begin --&gt;
+
+
+&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuI0NoZWNrIGlmIGFueSBkb2NzIGhhdmUgbm90IHlldCBiZWVuIHB1Ymxpc2hlZFxud2Zsb3dfc3RhdHVzKCkgXG4jIHNpbmdsZSBmaWxlXG53Zmxvd19wdWJsaXNoKFxcYW5hbHlzaXMvZmlsZS5SbWRcXCwgXFxJbmZvcm1hdGl2ZSBjb21taXQgbWVzc2FnZVxcKVxuIyBBbGwgdHJhY2tlZCBmaWxlcyB0aGF0IGhhdmUgYmVlbiBlZGl0ZWRcbndmbG93X3B1Ymxpc2goYWxsID0gVFJVRSwgbWVzc2FnZSA9IFxcSW5mb3JtYXRpdmUgY29tbWl0IG1lc3NhZ2VcXClcbiMgQSBuZXcgZmlsZSBwbHVzIGFsbCB0cmFja2VkIGZpbGVzIHRoYXQgaGF2ZSBiZWVuIGVkaXRlZFxud2Zsb3dfcHVibGlzaChcXGFuYWx5c2lzL2ZpbGUuUm1kXFwsIFxcSW5mb3JtYXRpdmUgY29tbWl0IG1lc3NhZ2VcXCwgYWxsID0gVFJVRSlcbiMgTXVsdGlwbGUgZmlsZXNcbndmbG93X3B1Ymxpc2goYyhcXGFuYWx5c2lzL2ZpbGUuUm1kXFwsIFxcYW5hbHlzaXMvYW5vdGhlci5SbWRcXCksXG4gICAgICAgICAgICAgIFxcSW5mb3JtYXRpdmUgY29tbWl0IG1lc3NhZ2VcXClcbiMgQWxsIFIgTWFya2Rvd24gZmlsZXMgdGhhdCBzdGFydCB3aXRoIHRoZSBwYXR0ZXJuIFxcbmV3X1xcXG53Zmxvd19wdWJsaXNoKFxcYW5hbHlzaXMvbmV3XypSbWRcXCwgXFxJbmZvcm1hdGl2ZSBjb21taXQgbWVzc2FnZVxcKVxuIyBSZXB1Ymxpc2ggYWxsIHB1Ymxpc2hlZCBmaWxlcyBldmVuIHRob3VnaCB0aGV5IGhhdmVuJ3QgYmVlbiBtb2RpZmllZC5cbiMgVXNlZnVsIGZvciBjaGFuZ2luZyBzb21lIHVuaXZlcnNhbCBhc3BlY3Qgb2YgdGhlIHNpdGUsIGUuZy4gdGhlIHRoZW1lXG4jIHNwZWNpZmllZCBpbiBfc2l0ZS55bWwuXG53Zmxvd19wdWJsaXNoKFxcYW5hbHlzaXMvX3NpdGUueW1sXFwsIFxcc2l0ZSB1cGRhdGVcXCwgcmVwdWJsaXNoID0gVFJVRSlcbiMgUHVibGlzaCBhbGwgcHJldmlvdXNseSBwdWJsaXNoZWQgZmlsZXMgdGhhdCBoYXZlIGJlZW4gY29tbWl0dGVkIG1vcmVcbiMgcmVjZW50bHkgdGhhbiB0aGVpciBjb3JyZXNwb25kaW5nIEhUTUwgZmlsZXMuIFRoaXMgaXMgdXNlZnVsIGlmIHlvdSBsaWtlIHRvXG4jIG1hbnVhbGx5IGNvbW1pdCB5b3VyIFIgTWFya2Rvd24gZmlsZXMuXG53Zmxvd19wdWJsaXNoKHVwZGF0ZSA9IFRSVUUpXG5cbndmbG93X3B1Ymxpc2goXFxhbmFseXNpcy9pbmRleC5SbWRcXCwgYWxsID0gVFJVRSwgbWVzc2FnZSA9IFxcVXBkYXRlIGluZGV4XFwpXG53Zmxvd19wdWJsaXNoKFxcYW5hbHlzaXMvRVNHX0NvdmFyaWF0ZV9Qcm9jZXNzaW5nLlJtZFxcLCBhbGwgPSBUUlVFLCBtZXNzYWdlID0gXFxVcGRhdGUgRVNHIGNvdmFyaWF0ZSBwcm9jZXNzaW5nXFwpXG5gYGBcbmBgYCJ9 --&gt;
+
+```r
+```r
+#Check if any docs have not yet been published
 wflow_status() 
 # single file
-wflow_publish(&quot;analysis/file.Rmd&quot;, &quot;Informative commit message&quot;)
+wflow_publish(\analysis/file.Rmd\, \Informative commit message\)
 # All tracked files that have been edited
-wflow_publish(all = TRUE, message = &quot;Informative commit message&quot;)
+wflow_publish(all = TRUE, message = \Informative commit message\)
 # A new file plus all tracked files that have been edited
-wflow_publish(&quot;analysis/file.Rmd&quot;, &quot;Informative commit message&quot;, all = TRUE)
+wflow_publish(\analysis/file.Rmd\, \Informative commit message\, all = TRUE)
 # Multiple files
-wflow_publish(c(&quot;analysis/file.Rmd&quot;, &quot;analysis/another.Rmd&quot;),
-              &quot;Informative commit message&quot;)
-# All R Markdown files that start with the pattern &quot;new_&quot;
-wflow_publish(&quot;analysis/new_*Rmd&quot;, &quot;Informative commit message&quot;)
+wflow_publish(c(\analysis/file.Rmd\, \analysis/another.Rmd\),
+              \Informative commit message\)
+# All R Markdown files that start with the pattern \new_\
+wflow_publish(\analysis/new_*Rmd\, \Informative commit message\)
 # Republish all published files even though they haven&#39;t been modified.
 # Useful for changing some universal aspect of the site, e.g. the theme
 # specified in _site.yml.
-wflow_publish(&quot;analysis/_site.yml&quot;, &quot;site update&quot;, republish = TRUE)
+wflow_publish(\analysis/_site.yml\, \site update\, republish = TRUE)
 # Publish all previously published files that have been committed more
 # recently than their corresponding HTML files. This is useful if you like to
 # manually commit your R Markdown files.
 wflow_publish(update = TRUE)
 
-wflow_publish(&quot;analysis/index.Rmd&quot;, all = TRUE, message = &quot;Update index&quot;)
-wflow_publish(&quot;analysis/ESG_Covariate_Processing.Rmd&quot;, all = TRUE, message = &quot;Update ESG covariate processing&quot;)</code></pre>
+wflow_publish(\analysis/index.Rmd\, all = TRUE, message = \Update index\)
+wflow_publish(\analysis/ESG_Covariate_Processing.Rmd\, all = TRUE, message = \Update ESG covariate processing\)</code></pre>
+<p>```</p>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIkdBRVogSHlwZXItbG9jYWxpemF0aW9uIg0Kb3V0cHV0OiBodG1sX25vdGVib29rDQotLS0NCg0KU3RlcHMgdG8gY3JlYXRlIFIgcHJvamVjdHM6DQoxLglOYXZpZ2F0ZSB0byBkaXJlY3RvcnkgdGhhdCB3aWxsIGhvc3QgdGhlIHByb2plY3QgZm9sZGVyLg0KMi4JSW4gUiwgbG9hZCDigJhycnRvb2xz4oCZIGFuZCDigJh3b3JrZmxvd3LigJkNCjMuCVJ1biDigJhycnRvb2xz4oCZIGNvZGUgdG8gY3JlYXRlIHJlc2VhcmNoIGNvbXBlbmRpdW06DQphLglycnRvb2xzOjp1c2VfY29tcGVuZGl1bSgibXlwcm9qZWN0ICIpDQpiLgl1c2V0aGlzOjp1c2VfbWl0X2xpY2Vuc2UobmFtZSA9ICJKb25hdGhhbiBKIE1heW5hcmQiKQ0KYy4JdXNldGhpczo6dXNlX2dpdCgpDQpkLglDcmVhdGUgZ2l0aHViIOKAmHJlcG/igJkgdG9rZW4gZm9yIOKAnG15cHJvamVjdOKAnQ0KZS4JdXNldGhpczo6dXNlX2dpdGh1YihhdXRoX3Rva2VuID0gInh4eHgiLCBwcm90b2NvbCA9ICJodHRwcyIsIHByaXZhdGUgPSBGQUxTRSkNCmYuCXJydG9vbHM6OnVzZV9yZWFkbWVfcm1kKCkNCmcuCXJydG9vbHM6OnVzZV9hbmFseXNpcygpDQpoLglyZW5hbWUgdGhlIOKAmGFuYWx5c2lz4oCZIGZvbGRlciB0byDigJhyZXBvcnTigJkNCmkuCXJydG9vbHM6OnVzZV9kb2NrZXJmaWxlKCkNCmouCXJydG9vbHM6OnVzZV90cmF2aXMoKQ0KNC4JUnVuIOKAmHdvcmtmbG93cuKAmSBjb2RlIHRvIGNyZWF0ZSByZXNlYXJjaCB3ZWJzaXRlDQphLgl3Zmxvd19zdGFydCgibXlwcm9qZWN0X3NpdGUiKQ0KYi4Jd2Zsb3dfYnVpbGQoKSBhbmQgd2Zsb3dfdmlldygpIHRvIGJ1aWxkIGFuZCB2aWV3IHdlYnNpdGUNCmMuCXdmbG93X3B1Ymxpc2goYygiYW5hbHlzaXMvaW5kZXguUm1kIiwgImFuYWx5c2lzL2Fib3V0LlJtZCIsICJhbmFseXNpcy9saWNlbnNlLlJtZCIpLCAiUHVibGlzaCB0aGUgaW5pdGlhbCBmaWxlcyBmb3IgbXlwcm9qZWN0IikNCmQuCXdmbG93X3N0YXR1cygpIHRvIGNoZWNrIGlmIGRvY3MgaGF2ZSBiZWVuIHB1Ymxpc2hlZA0KNS4JSW50ZWdyZWF0ZSBycnRvb2xzIGZvbGRlciBhbmQgd29ya2Zsb3cgZm9sZGVyOg0KYS4JTW92ZSBpdGVtcyBmcm9tICJteXByb2plY3Rfc2l0ZSIgdG8gIm15cHJvamVjdCAiDQo2LglDb21taXQgY2hhbmdlcyB3aXRoIEdpdCBhbmQgcHVzaCB0byBHaXRIdWIuIEFsbCBmdXR1cmUgY2hhbmdlcyBjYW4gYmUgcHVzaGVkIHRvDQoNCiMgTW9kaWZ5IHRoaXMgc2VjdGlvbiBmb3IgZWFjaCBuZXcgcHJvamVjdA0KYGBge3J9DQojIHNldCBwcm9qZWN0IG5hbWUgYW5kIHBhdGgNCm5hbWUgPC0gIkdBRVoiDQpwYXRoIDwtICJDOi9SX0RyaXZlL0RhdGFfRmlsZXMvTFBLU19EYXRhL1JfUHJvamVjdHMvR0FFWiINCmBgYA0KDQpgYGB7cn0NCiMgc2V0IHdvcmtmbG93ciBuYW1lIGFuZCBwYXRoDQp3ZmxyX25hbWUgPC0gcGFzdGUwKG5hbWUsICJfc2l0ZSIpDQp3ZmxyX3BhdGggPC0gcGFzdGUwKHBhdGgsICIvIiwgd2Zscl9uYW1lKQ0KYGBgDQoNCmBgYHtyfQ0KbGlicmFyeShycnRvb2xzKQ0KbGlicmFyeSh3b3JrZmxvd3IpDQpgYGANCg0KIyBBZGQgYXV0aF90b2tlbiBmb3IgcHJvamVjdA0KDQpgYGB7cn0NCiNzZXR3ZChwYXRoKQ0KcnJ0b29sczo6dXNlX2NvbXBlbmRpdW0obmFtZSkNCnVzZXRoaXM6OnVzZV9taXRfbGljZW5zZShuYW1lID0gIkpvbmF0aGFuIEogTWF5bmFyZCIpDQp1c2V0aGlzOjp1c2VfZ2l0KCkNCiNDcmVhdGUgZ2l0aHViIOKAmHJlcG/igJkgdG9rZW4gZm9yIOKAnG15cHJvamVjdOKAnQ0KdXNldGhpczo6dXNlX2dpdGh1YihhdXRoX3Rva2VuID0gImIwNjA2YWU0MWMxYTI5ZDk4MTQyMWFiMmU0MTAwZTQ1OTU3Y2I1ZTAiLCBwcm90b2NvbCA9ICJodHRwcyIsIHByaXZhdGUgPSBGQUxTRSkNCnJydG9vbHM6OnVzZV9yZWFkbWVfcm1kKHBrZyA9IHBhdGgsIHJlbmRlcl9yZWFkbWUgPSBUUlVFKQ0KcnJ0b29sczo6dXNlX2FuYWx5c2lzKHBhdGgpDQojcmVuYW1lIHRoZSDigJhhbmFseXNpc+KAmSBmb2xkZXIgdG8g4oCYbWFudXNjcmlwdOKAmQ0KcnJ0b29sczo6dXNlX2RvY2tlcmZpbGUocGF0aCkNCnJydG9vbHM6OnVzZV90cmF2aXMocGF0aCkNCmBgYA0KDQojIFJ1biB3b3JrZmxvd3IgY29kZSBhcyBjaHVuaw0KYGBge3J9DQojUnVuIOKAmHdvcmtmbG93cuKAmSBjb2RlIHRvIGNyZWF0ZSByZXNlYXJjaCB3ZWJzaXRlDQp3Zmxvd19zdGFydCh3ZmxyX3BhdGgsIGdpdCA9IEZBTFNFKQ0Kd2Zsb3dfYnVpbGQoKSAjdG8gYnVpbGQgIHdlYnNpdGUNCndmbG93X3ZpZXcoKSAgI3ZpZXcgd2Vic2l0ZQ0KYGBgDQoNCiMgUGVyZm9ybSB0aGVzZSBzdGVwcw0KICAxLiByZW5hbWUgImFuYWx5c2lzL2Fib3V0LlJtZCIgdG8gImFuYWx5c2lzL2NvZGUuUm1kIg0KICAyLiBjcmVhdGUgbmV3IFJtYXJrZG93biBmaWxlICJhbmFseXNpcy9kYXRhLlJtZCINCg0KIyBSdW4gd29ya2Zsb3dyIGNvZGUgYXMgY2h1bmsNCmBgYHtyfQ0Kc2V0d2Qod2Zscl9wYXRoKQ0Kd2Zsb3dfcHVibGlzaChjKCJhbmFseXNpcy9pbmRleC5SbWQiLCAiYW5hbHlzaXMvY29kZS5SbWQiLCAiYW5hbHlzaXMvZGF0YS5SbWQiLCAiYW5hbHlzaXMvbGljZW5zZS5SbWQiKSwgIlB1Ymxpc2ggdGhlIGluaXRpYWwgZmlsZXMgZm9yIG15cHJvamVjdCIpDQp3Zmxvd19zdGF0dXMoKSAjdG8gY2hlY2sgaWYgZG9jcyBoYXZlIGJlZW4gcHVibGlzaGVkDQpgYGANCg0KI0ludGVncmVhdGUgcnJ0b29scyBmb2xkZXIgYW5kIHdvcmtmbG93ciBmb2xkZXI6DQpDaGFuZ2VzIHRvIHJydG9vbHMgZm9sZGVyIChwcm9qZWN0IGZvbGRlcik6DQogIDEuIGVyYXNlIHJydG9vbHMgLmdpdGlnbm9yZSBhbmQgLnByb2ZpbGUNCiAgMi4gcmVuYW1lIGFuYWx5c2lzIGZvbGRlciB0byAncmVzdWx0cycNCiAgMy4gbW92ZSByZXN1bHRzL2RhdGEgZmlsZXMgdG8gZGF0YS8NCiAgNC4gZXJhc2UgUi8gZm9sZGVyDQogIDUuIENyZWF0ZSAncHJval9zZXR1cCcgZm9sZGVyIGFuZCBzYXZlIFByb2plY3RfY3JlYXRpb24uUm1kIHNjcmlwdCBpbiB0aGlzIGZvbGRlcg0KICA2LiBtb3ZlIFJFQURNRS5tZCBpbiAvb3V0cHV0IGZvbGRlciB0byBkYXRhL2Rlcml2ZWQvIGFuZCBlcmFzZSAvb3V0cHV0DQoNCkNoYW5nZXMgdG8gd29ya2Zsb3dyIGZvbGRlciAoc3ViIHByb2plY3QgZm9sZGVyKToNCiAgMS4gZXJhc2Ugd29ya2Zsb3dyIFJFQURNRS5SbWQNCiAgMi4gbW92ZSBSRUFETUUuUm1kIGluIGRhdGEgZm9sZGVyIHRvIHJydG9vbHMgZGF0YSBmb2xkZXIgYW5kIGVyYXNlIGRhdGEgZm9sZGVyDQogIDMuIGVyYXNlIHdvcmtmbG93ciBScHJvaiBmaWxlDQogIDQuIG1vdmUgYWxsIGZpbGVzIGZyb20gd29ya2Zsb3dyIGZvbGRlciB0byBtYWluIHByb2plY3QgZm9sZGVyLCB0aGVuIGVyYXNlIHdvcmtmbG93ciBmb2xkZXINCiAgNS4gYWRkICdwcm9qX3NldHVwLycgdG8gLmdpdGlnbm9yZQ0KDQpDb21taXQgY2hhbmdlcyB3aXRoIEdpdCBhbmQgcHVzaCB0byBHaXRIdWIuDQpJbiBHaXRodWIsIHNldCBnaXRodWIgcHJvamVjdCBzaXRlIHRvIC9kb2NzIGluIHNldHRpbmdzDQoNCg0KDQpgYGB7cn0NCnNldHdkKHBhdGgpDQp3Zmxvd19wdWJsaXNoKGMoImFuYWx5c2lzL2luZGV4LlJtZCIsICJhbmFseXNpcy9jb2RlLlJtZCIsICJhbmFseXNpcy9kYXRhLlJtZCIsICJhbmFseXNpcy9saWNlbnNlLlJtZCIpLCAiUHVibGlzaCB0aGUgaW5pdGlhbCBmaWxlcyBmb3IgbXlwcm9qZWN0IikNCndmbG93X3N0YXR1cygpICN0byBjaGVjayBpZiBkb2NzIGhhdmUgYmVlbiBwdWJsaXNoZWQNCmBgYA0KDQoNCiMjRXhhbXBsZXMgZm9yIG1ha2luZyBjaGFuZ2VzIHRvIHByb2plY3Qgd2Vic2l0ZSB3aXRoIHdvcmtmbG93cg0KYGBge3J9DQojQ2hlY2sgaWYgYW55IGRvY3MgaGF2ZSBub3QgeWV0IGJlZW4gcHVibGlzaGVkDQp3Zmxvd19zdGF0dXMoKSANCiMgc2luZ2xlIGZpbGUNCndmbG93X3B1Ymxpc2goImFuYWx5c2lzL2ZpbGUuUm1kIiwgIkluZm9ybWF0aXZlIGNvbW1pdCBtZXNzYWdlIikNCiMgQWxsIHRyYWNrZWQgZmlsZXMgdGhhdCBoYXZlIGJlZW4gZWRpdGVkDQp3Zmxvd19wdWJsaXNoKGFsbCA9IFRSVUUsIG1lc3NhZ2UgPSAiSW5mb3JtYXRpdmUgY29tbWl0IG1lc3NhZ2UiKQ0KIyBBIG5ldyBmaWxlIHBsdXMgYWxsIHRyYWNrZWQgZmlsZXMgdGhhdCBoYXZlIGJlZW4gZWRpdGVkDQp3Zmxvd19wdWJsaXNoKCJhbmFseXNpcy9maWxlLlJtZCIsICJJbmZvcm1hdGl2ZSBjb21taXQgbWVzc2FnZSIsIGFsbCA9IFRSVUUpDQojIE11bHRpcGxlIGZpbGVzDQp3Zmxvd19wdWJsaXNoKGMoImFuYWx5c2lzL2ZpbGUuUm1kIiwgImFuYWx5c2lzL2Fub3RoZXIuUm1kIiksDQogICAgICAgICAgICAgICJJbmZvcm1hdGl2ZSBjb21taXQgbWVzc2FnZSIpDQojIEFsbCBSIE1hcmtkb3duIGZpbGVzIHRoYXQgc3RhcnQgd2l0aCB0aGUgcGF0dGVybiAibmV3XyINCndmbG93X3B1Ymxpc2goImFuYWx5c2lzL25ld18qUm1kIiwgIkluZm9ybWF0aXZlIGNvbW1pdCBtZXNzYWdlIikNCiMgUmVwdWJsaXNoIGFsbCBwdWJsaXNoZWQgZmlsZXMgZXZlbiB0aG91Z2ggdGhleSBoYXZlbid0IGJlZW4gbW9kaWZpZWQuDQojIFVzZWZ1bCBmb3IgY2hhbmdpbmcgc29tZSB1bml2ZXJzYWwgYXNwZWN0IG9mIHRoZSBzaXRlLCBlLmcuIHRoZSB0aGVtZQ0KIyBzcGVjaWZpZWQgaW4gX3NpdGUueW1sLg0Kd2Zsb3dfcHVibGlzaCgiYW5hbHlzaXMvX3NpdGUueW1sIiwgInNpdGUgdXBkYXRlIiwgcmVwdWJsaXNoID0gVFJVRSkNCiMgUHVibGlzaCBhbGwgcHJldmlvdXNseSBwdWJsaXNoZWQgZmlsZXMgdGhhdCBoYXZlIGJlZW4gY29tbWl0dGVkIG1vcmUNCiMgcmVjZW50bHkgdGhhbiB0aGVpciBjb3JyZXNwb25kaW5nIEhUTUwgZmlsZXMuIFRoaXMgaXMgdXNlZnVsIGlmIHlvdSBsaWtlIHRvDQojIG1hbnVhbGx5IGNvbW1pdCB5b3VyIFIgTWFya2Rvd24gZmlsZXMuDQp3Zmxvd19wdWJsaXNoKHVwZGF0ZSA9IFRSVUUpDQoNCndmbG93X3B1Ymxpc2goImFuYWx5c2lzL2luZGV4LlJtZCIsIGFsbCA9IFRSVUUsIG1lc3NhZ2UgPSAiVXBkYXRlIGluZGV4IikNCndmbG93X3B1Ymxpc2goImFuYWx5c2lzL0VTR19Db3ZhcmlhdGVfUHJvY2Vzc2luZy5SbWQiLCBhbGwgPSBUUlVFLCBtZXNzYWdlID0gIlVwZGF0ZSBFU0cgY292YXJpYXRlIHByb2Nlc3NpbmciKQ0KYGBgDQoNCg==</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiR0FFWiBIeXBlci1sb2NhbGl6YXRpb24iCm91dHB1dDogaHRtbF9ub3RlYm9vawotLS0KClN0ZXBzIHRvIGNyZWF0ZSBSIHByb2plY3RzOgoxLglOYXZpZ2F0ZSB0byBkaXJlY3RvcnkgdGhhdCB3aWxsIGhvc3QgdGhlIHByb2plY3QgZm9sZGVyLgoyLglJbiBSLCBsb2FkIOKAmHJydG9vbHPigJkgYW5kIOKAmHdvcmtmbG93cuKAmQozLglSdW4g4oCYcnJ0b29sc+KAmSBjb2RlIHRvIGNyZWF0ZSByZXNlYXJjaCBjb21wZW5kaXVtOgphLglycnRvb2xzOjp1c2VfY29tcGVuZGl1bSgibXlwcm9qZWN0ICIpCmIuCXVzZXRoaXM6OnVzZV9taXRfbGljZW5zZShuYW1lID0gIkpvbmF0aGFuIEogTWF5bmFyZCIpCmMuCXVzZXRoaXM6OnVzZV9naXQoKQpkLglDcmVhdGUgZ2l0aHViIOKAmHJlcG/igJkgdG9rZW4gZm9yIOKAnG15cHJvamVjdOKAnQplLgl1c2V0aGlzOjp1c2VfZ2l0aHViKGF1dGhfdG9rZW4gPSAieHh4eCIsIHByb3RvY29sID0gImh0dHBzIiwgcHJpdmF0ZSA9IEZBTFNFKQpmLglycnRvb2xzOjp1c2VfcmVhZG1lX3JtZCgpCmcuCXJydG9vbHM6OnVzZV9hbmFseXNpcygpCmguCXJlbmFtZSB0aGUg4oCYYW5hbHlzaXPigJkgZm9sZGVyIHRvIOKAmHJlcG9ydOKAmQppLglycnRvb2xzOjp1c2VfZG9ja2VyZmlsZSgpCmouCXJydG9vbHM6OnVzZV90cmF2aXMoKQo0LglSdW4g4oCYd29ya2Zsb3dy4oCZIGNvZGUgdG8gY3JlYXRlIHJlc2VhcmNoIHdlYnNpdGUKYS4Jd2Zsb3dfc3RhcnQoIm15cHJvamVjdF9zaXRlIikKYi4Jd2Zsb3dfYnVpbGQoKSBhbmQgd2Zsb3dfdmlldygpIHRvIGJ1aWxkIGFuZCB2aWV3IHdlYnNpdGUKYy4Jd2Zsb3dfcHVibGlzaChjKCJhbmFseXNpcy9pbmRleC5SbWQiLCAiYW5hbHlzaXMvYWJvdXQuUm1kIiwgImFuYWx5c2lzL2xpY2Vuc2UuUm1kIiksICJQdWJsaXNoIHRoZSBpbml0aWFsIGZpbGVzIGZvciBteXByb2plY3QiKQpkLgl3Zmxvd19zdGF0dXMoKSB0byBjaGVjayBpZiBkb2NzIGhhdmUgYmVlbiBwdWJsaXNoZWQKNS4JSW50ZWdyZWF0ZSBycnRvb2xzIGZvbGRlciBhbmQgd29ya2Zsb3cgZm9sZGVyOgphLglNb3ZlIGl0ZW1zIGZyb20gIm15cHJvamVjdF9zaXRlIiB0byAibXlwcm9qZWN0ICIKNi4JQ29tbWl0IGNoYW5nZXMgd2l0aCBHaXQgYW5kIHB1c2ggdG8gR2l0SHViLiBBbGwgZnV0dXJlIGNoYW5nZXMgY2FuIGJlIHB1c2hlZCB0bwoKIyBNb2RpZnkgdGhpcyBzZWN0aW9uIGZvciBlYWNoIG5ldyBwcm9qZWN0CmBgYHtyfQojIHNldCBwcm9qZWN0IG5hbWUgYW5kIHBhdGgKbmFtZSA8LSAiR0FFWiIKcGF0aCA8LSAiQzovUl9Ecml2ZS9EYXRhX0ZpbGVzL0xQS1NfRGF0YS9SX1Byb2plY3RzL0dBRVoiCmBgYAoKYGBge3J9CiMgc2V0IHdvcmtmbG93ciBuYW1lIGFuZCBwYXRoCndmbHJfbmFtZSA8LSBwYXN0ZTAobmFtZSwgIl9zaXRlIikKd2Zscl9wYXRoIDwtIHBhc3RlMChwYXRoLCAiLyIsIHdmbHJfbmFtZSkKYGBgCgpgYGB7cn0KbGlicmFyeShycnRvb2xzKQpsaWJyYXJ5KHdvcmtmbG93cikKYGBgCgojIEFkZCBhdXRoX3Rva2VuIGZvciBwcm9qZWN0CgpgYGB7cn0KI3NldHdkKHBhdGgpCnJydG9vbHM6OnVzZV9jb21wZW5kaXVtKG5hbWUpCnVzZXRoaXM6OnVzZV9taXRfbGljZW5zZShuYW1lID0gIkpvbmF0aGFuIEogTWF5bmFyZCIpCnVzZXRoaXM6OnVzZV9naXQoKQojQ3JlYXRlIGdpdGh1YiDigJhyZXBv4oCZIHRva2VuIGZvciDigJxteXByb2plY3TigJ0KdXNldGhpczo6dXNlX2dpdGh1YihhdXRoX3Rva2VuID0gImdocF90SU85OGNmN2M4YTdCTGhlMk5pYVN4b28yRDdYMDExbDhMcDYiLCBwcm90b2NvbCA9ICJodHRwcyIsIHByaXZhdGUgPSBGQUxTRSkKcnJ0b29sczo6dXNlX3JlYWRtZV9ybWQocGtnID0gcGF0aCwgcmVuZGVyX3JlYWRtZSA9IFRSVUUpCnJydG9vbHM6OnVzZV9hbmFseXNpcyhwYXRoKQojcmVuYW1lIHRoZSDigJhhbmFseXNpc+KAmSBmb2xkZXIgdG8g4oCYbWFudXNjcmlwdOKAmQpycnRvb2xzOjp1c2VfZG9ja2VyZmlsZShwYXRoKQpycnRvb2xzOjp1c2VfdHJhdmlzKHBhdGgpCmBgYAoKIyBSdW4gd29ya2Zsb3dyIGNvZGUgYXMgY2h1bmsKYGBge3J9CiNSdW4g4oCYd29ya2Zsb3dy4oCZIGNvZGUgdG8gY3JlYXRlIHJlc2VhcmNoIHdlYnNpdGUKd2Zsb3dfc3RhcnQod2Zscl9wYXRoLCBnaXQgPSBGQUxTRSkKd2Zsb3dfYnVpbGQoKSAjdG8gYnVpbGQgIHdlYnNpdGUKd2Zsb3dfdmlldygpICAjdmlldyB3ZWJzaXRlCmBgYAoKIyBQZXJmb3JtIHRoZXNlIHN0ZXBzCiAgMS4gcmVuYW1lICJhbmFseXNpcy9hYm91dC5SbWQiIHRvICJhbmFseXNpcy9jb2RlLlJtZCIKICAyLiBjcmVhdGUgbmV3IFJtYXJrZG93biBmaWxlICJhbmFseXNpcy9kYXRhLlJtZCIKCiMgUnVuIHdvcmtmbG93ciBjb2RlIGFzIGNodW5rCmBgYHtyfQpzZXR3ZCh3ZmxyX3BhdGgpCndmbG93X3B1Ymxpc2goYygiYW5hbHlzaXMvaW5kZXguUm1kIiwgImFuYWx5c2lzL2NvZGUuUm1kIiwgImFuYWx5c2lzL2RhdGEuUm1kIiwgImFuYWx5c2lzL2xpY2Vuc2UuUm1kIiksICJQdWJsaXNoIHRoZSBpbml0aWFsIGZpbGVzIGZvciBteXByb2plY3QiKQp3Zmxvd19zdGF0dXMoKSAjdG8gY2hlY2sgaWYgZG9jcyBoYXZlIGJlZW4gcHVibGlzaGVkCmBgYAoKI0ludGVncmVhdGUgcnJ0b29scyBmb2xkZXIgYW5kIHdvcmtmbG93ciBmb2xkZXI6CkNoYW5nZXMgdG8gcnJ0b29scyBmb2xkZXIgKHByb2plY3QgZm9sZGVyKToKICAxLiBlcmFzZSBycnRvb2xzIC5naXRpZ25vcmUgYW5kIC5wcm9maWxlCiAgMi4gcmVuYW1lIGFuYWx5c2lzIGZvbGRlciB0byAncmVzdWx0cycKICAzLiBtb3ZlIHJlc3VsdHMvZGF0YSBmaWxlcyB0byBkYXRhLwogIDQuIGVyYXNlIFIvIGZvbGRlcgogIDUuIENyZWF0ZSAncHJval9zZXR1cCcgZm9sZGVyIGFuZCBzYXZlIFByb2plY3RfY3JlYXRpb24uUm1kIHNjcmlwdCBpbiB0aGlzIGZvbGRlcgogIDYuIG1vdmUgUkVBRE1FLm1kIGluIC9vdXRwdXQgZm9sZGVyIHRvIGRhdGEvZGVyaXZlZC8gYW5kIGVyYXNlIC9vdXRwdXQKCkNoYW5nZXMgdG8gd29ya2Zsb3dyIGZvbGRlciAoc3ViIHByb2plY3QgZm9sZGVyKToKICAxLiBlcmFzZSB3b3JrZmxvd3IgUkVBRE1FLlJtZAogIDIuIG1vdmUgUkVBRE1FLlJtZCBpbiBkYXRhIGZvbGRlciB0byBycnRvb2xzIGRhdGEgZm9sZGVyIGFuZCBlcmFzZSBkYXRhIGZvbGRlcgogIDMuIGVyYXNlIHdvcmtmbG93ciBScHJvaiBmaWxlCiAgNC4gbW92ZSBhbGwgZmlsZXMgZnJvbSB3b3JrZmxvd3IgZm9sZGVyIHRvIG1haW4gcHJvamVjdCBmb2xkZXIsIHRoZW4gZXJhc2Ugd29ya2Zsb3dyIGZvbGRlcgogIDUuIGFkZCAncHJval9zZXR1cC8nIHRvIC5naXRpZ25vcmUKCkNvbW1pdCBjaGFuZ2VzIHdpdGggR2l0IGFuZCBwdXNoIHRvIEdpdEh1Yi4KSW4gR2l0aHViLCBzZXQgZ2l0aHViIHByb2plY3Qgc2l0ZSB0byAvZG9jcyBpbiBzZXR0aW5ncwoKCgpgYGB7cn0Kc2V0d2QocGF0aCkKd2Zsb3dfcHVibGlzaChjKCJhbmFseXNpcy9pbmRleC5SbWQiLCAiYW5hbHlzaXMvY29kZS5SbWQiLCAiYW5hbHlzaXMvZGF0YS5SbWQiLCAiYW5hbHlzaXMvbGljZW5zZS5SbWQiKSwgIlB1Ymxpc2ggdGhlIGluaXRpYWwgZmlsZXMgZm9yIG15cHJvamVjdCIpCndmbG93X3N0YXR1cygpICN0byBjaGVjayBpZiBkb2NzIGhhdmUgYmVlbiBwdWJsaXNoZWQKYGBgCgoKIyNFeGFtcGxlcyBmb3IgbWFraW5nIGNoYW5nZXMgdG8gcHJvamVjdCB3ZWJzaXRlIHdpdGggd29ya2Zsb3dyCmBgYHtyfQojQ2hlY2sgaWYgYW55IGRvY3MgaGF2ZSBub3QgeWV0IGJlZW4gcHVibGlzaGVkCndmbG93X3N0YXR1cygpIAojIHNpbmdsZSBmaWxlCndmbG93X3B1Ymxpc2goImFuYWx5c2lzL2ZpbGUuUm1kIiwgIkluZm9ybWF0aXZlIGNvbW1pdCBtZXNzYWdlIikKIyBBbGwgdHJhY2tlZCBmaWxlcyB0aGF0IGhhdmUgYmVlbiBlZGl0ZWQKd2Zsb3dfcHVibGlzaChhbGwgPSBUUlVFLCBtZXNzYWdlID0gIkluZm9ybWF0aXZlIGNvbW1pdCBtZXNzYWdlIikKIyBBIG5ldyBmaWxlIHBsdXMgYWxsIHRyYWNrZWQgZmlsZXMgdGhhdCBoYXZlIGJlZW4gZWRpdGVkCndmbG93X3B1Ymxpc2goImFuYWx5c2lzL2ZpbGUuUm1kIiwgIkluZm9ybWF0aXZlIGNvbW1pdCBtZXNzYWdlIiwgYWxsID0gVFJVRSkKIyBNdWx0aXBsZSBmaWxlcwp3Zmxvd19wdWJsaXNoKGMoImFuYWx5c2lzL2ZpbGUuUm1kIiwgImFuYWx5c2lzL2Fub3RoZXIuUm1kIiksCiAgICAgICAgICAgICAgIkluZm9ybWF0aXZlIGNvbW1pdCBtZXNzYWdlIikKIyBBbGwgUiBNYXJrZG93biBmaWxlcyB0aGF0IHN0YXJ0IHdpdGggdGhlIHBhdHRlcm4gIm5ld18iCndmbG93X3B1Ymxpc2goImFuYWx5c2lzL25ld18qUm1kIiwgIkluZm9ybWF0aXZlIGNvbW1pdCBtZXNzYWdlIikKIyBSZXB1Ymxpc2ggYWxsIHB1Ymxpc2hlZCBmaWxlcyBldmVuIHRob3VnaCB0aGV5IGhhdmVuJ3QgYmVlbiBtb2RpZmllZC4KIyBVc2VmdWwgZm9yIGNoYW5naW5nIHNvbWUgdW5pdmVyc2FsIGFzcGVjdCBvZiB0aGUgc2l0ZSwgZS5nLiB0aGUgdGhlbWUKIyBzcGVjaWZpZWQgaW4gX3NpdGUueW1sLgp3Zmxvd19wdWJsaXNoKCJhbmFseXNpcy9fc2l0ZS55bWwiLCAic2l0ZSB1cGRhdGUiLCByZXB1Ymxpc2ggPSBUUlVFKQojIFB1Ymxpc2ggYWxsIHByZXZpb3VzbHkgcHVibGlzaGVkIGZpbGVzIHRoYXQgaGF2ZSBiZWVuIGNvbW1pdHRlZCBtb3JlCiMgcmVjZW50bHkgdGhhbiB0aGVpciBjb3JyZXNwb25kaW5nIEhUTUwgZmlsZXMuIFRoaXMgaXMgdXNlZnVsIGlmIHlvdSBsaWtlIHRvCiMgbWFudWFsbHkgY29tbWl0IHlvdXIgUiBNYXJrZG93biBmaWxlcy4Kd2Zsb3dfcHVibGlzaCh1cGRhdGUgPSBUUlVFKQoKd2Zsb3dfcHVibGlzaCgiYW5hbHlzaXMvaW5kZXguUm1kIiwgYWxsID0gVFJVRSwgbWVzc2FnZSA9ICJVcGRhdGUgaW5kZXgiKQp3Zmxvd19wdWJsaXNoKCJhbmFseXNpcy9FU0dfQ292YXJpYXRlX1Byb2Nlc3NpbmcuUm1kIiwgYWxsID0gVFJVRSwgbWVzc2FnZSA9ICJVcGRhdGUgRVNHIGNvdmFyaWF0ZSBwcm9jZXNzaW5nIikKYGBgCgo=</div>
 
 
 
