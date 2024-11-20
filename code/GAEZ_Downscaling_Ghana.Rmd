@@ -1,0 +1,594 @@
+---
+title: "GAEZ Downscaling Ghana"
+output: html_notebook
+---
+
+```{r message=FALSE, warning=FALSE}
+#set libary path
+required.packages <- c("sf", "readr", "dplyr", "tidyr", "purrr", "reticulate", "Rcpp", "stringr", "utils", "httr", "jsonlite", "here", "raster", "aqp", "GSIF","XML", "rgdal","gdalUtils", "viridis", "rasterVis", "ggplot2", "foreach")
+new.packages <- required.packages[!(required.packages %in% installed.packages()[, 
+    "Package"])]
+if (length(new.packages)>0){ install.packages(new.packages)}
+lapply(required.packages, require, character.only = TRUE)
+rm(required.packages, new.packages)
+
+```
+
+# Validation Data
+```{r}
+Validation_Soil_Data <- read.csv('C:/R_Drive/Data_Files/LPKS_Data/Projects/Ghana/Project Documents/Field_Sampling/Field_Data/Validation_Data/CSIR_LPKS_Validation_Soil_Data2021-04-16.csv')
+
+Validation_Site_Data <- read.csv('C:/R_Drive/Data_Files/LPKS_Data/Projects/Ghana/Project Documents/Field_Sampling/Field_Data/Validation_Data/CSIR_LPKS_Validation_Site_Data2021-04-16.csv')
+
+Validation_Lab_Data  <- read.csv('C:/R_Drive/Data_Files/LPKS_Data/Projects/Ghana/Project Documents/Field_Sampling/Field_Data/Validation_Data/Validation_Lab_Data.csv')
+
+
+
+Validation_Soil_Data <- Validation_Soil_Data %>% full_join(Validation_Lab_Data, by=c('CSIR_Pit', 'bottom')) %>% left_join(Validation_Site_Data %>% dplyr::select(CSIR_Pit, slope, soilDepth, waterTableDepth, flooding, stoniness, is_compaction_layer), by=c('CSIR_Pit'))
+
+```
+
+# EPA data from validation sites
+```{r}
+#load in processed LandPKS Cocoa data sites
+EPA_Site_Data <- readRDS('C:/R_Drive/Data_Files/LPKS_Data/R_Projects/LPKS.Ghana/data/private_data/Ghana_LPKS_Site_Data.rds')
+EPA_Soil_Data <- readRDS('C:/R_Drive/Data_Files/LPKS_Data/R_Projects/LPKS.Ghana/data/private_data/Ghana_LPKS_Soil_Data.rds')
+EPA_Soil_Data <- EPA_Soil_Data %>% dplyr::select(id, name, bedrock_depth, cracks, bottom, texture, rfv_class, soil_color, latitude, longitude) %>% dplyr::mutate(bedrock_depth = as.integer(bedrock_depth))
+EPA_Soil_Data <- EPA_Soil_Data %>% dplyr::filter(name %in% Validation_Soil_Data$name)
+EPA_Soil_Data <- EPA_Soil_Data %>% dplyr::rename(Pedon_ID = id) %>% dplyr::mutate(bedrock_depth = bedrock_depth %>% as.numeric() %>% tidyr::replace_na(NaN))
+EPA_Soil_Data <- EPA_Soil_Data  %>% left_join(EPA_Site_Data %>% dplyr::select(name, slope, flooding, stoniness, is_compaction_layer, surface_salt, waterTableDepth, soilDepth), by='name') %>% distinct()
+
+
+#join Pedon_ID to Validation_Soil_Data
+Validation_Soil_Data <- Validation_Soil_Data %>% left_join(EPA_Soil_Data %>% dplyr::select(name, Pedon_ID), by='name') %>% distinct() %>% dplyr::filter(bottom<=70) %>% dplyr::mutate(bedrock_depth = bedrock_depth %>% as.numeric() %>% tidyr::replace_na(NaN))
+
+```
+
+# CEC clay calculation for validation sites
+```{r}
+
+S_Class <- function(rating){
+  if(rating >= 95){
+    SC <- 'S0'
+  } else if(rating < 95 & rating >= 85){
+    SC <- 'S1'
+  } else if(rating < 85 & rating >= 60){
+    SC <- 'S2'
+  } else if(rating < 60 & rating >= 40){
+    SC <- 'S3'
+  } else if(rating < 40 & rating >= 10){
+    SC <- 'S4'
+  } else if(rating < 10){
+    SC <- 'N'
+  } 
+  return(SC)
+}
+
+getClay <- function(texture){
+        if(is.na(texture) | texture==""){
+          clay <- NA
+        }else{
+            txt_l <- stringr::str_to_lower(texture)
+            if(txt_l == "sand"){
+                clay <- 5.0
+            }else if(txt_l == "loamy sand"){
+                clay <- 7.5
+            }else if(txt_l == "sandy loam"){
+                clay <- 10.0
+            }else if(txt_l == "sandy clay loam"){
+                clay <- 27.5
+            }else if(txt_l == "loam"){
+                clay <- 17.0
+            }else if(txt_l == "silt"){
+                clay <- 6.0
+            }else if(txt_l == "silt loam"){
+                clay <- 13.5
+            }else if(txt_l == "silty clay loam"){
+                clay <- 33.5
+            }else if( txt_l == "clay loam"){
+                clay <- 33.5
+            }else if(txt_l == "sandy clay"){
+                clay <- 45.0
+            }else if(txt_l == "silty clay"){
+                clay <- 50.0
+            }else if(txt_l == "clay"){
+                clay <- 70.0
+            }}
+        return(clay)
+}
+Validation_Soil_Data <- Validation_Soil_Data %>% rowwise() %>% dplyr::mutate(clay = getClay(texture)) %>% ungroup()
+Validation_Soil_Data <- Validation_Soil_Data %>% rowwise() %>% dplyr::mutate(CECc = (ECEC - (250*(OC*.001)))/(clay/100))
+Validation_Soil_Data <- Validation_Soil_Data %>% rowwise() %>% dplyr::mutate(ESP = ((Na/(Na+Ca+Mg+K))*100))
+#CECs <- (prof$CECS - (250*(prof$ORGC*.001)))/(prof$CLPC/100)
+```
+
+
+# FarmGrow data
+```{r}
+LPKS_FG_Data <- readRDS(here('data/derived_data/LPKS_FG_Data.rds'))
+LPKS_FG_Data_val <- LPKS_FG_Data %>% dplyr::filter(name %in% Validation_Soil_Data$name) 
+
+```
+
+# Compile data for comparison
+```{r}
+Validation_Sites_Compare <- Validation_Soil_Data %>% dplyr::select(name,CSIR_Pit, Pedon_ID, bottom, texture, rfv_class,OC, OM, pH, N, P_mgkg, K) %>% dplyr::filter(bottom == 1) %>% left_join(LPKS_FG_Data_val %>% dplyr::select(name, Productivity, Recommendation, Genetics,Farm.Condition,Farm.age,Tree.health, Weeding, Pruning, Tree.age, Tree.density, Harvesting, Pest.Sanitation, Shade.Management), by="name")
+
+
+Val_site_tax <- data.frame(c("P1", "P2", "P3",  "P4",  "P5",  "P6",  "P7",  "P8",  "P9", "P10"), c("Ferric Lixisol", 'Haplic Acrisol', "Ferric Lixisol",'Ferric Acrisol', 'Haplic Lixisol', 'Ferric Acrisol', 'Ferric Acrisol','Haplic Lixisol','Haplic Lixisol','Haplic Lixisol'), c('Swedru', 'Nzima', 'Swedru', 'Bekwai', 'Kokofu', 'Bekwai', 'Bekwai', 'Kokofu', 'Eshiem', 'Kokofu')) %>% purrr::set_names('CSIR_Pit', "WRB", "series")
+
+Validation_Sites_Compare <- Validation_Sites_Compare %>% left_join(Val_site_tax, by="CSIR_Pit")
+Validation_Soil_Data <- Validation_Soil_Data %>% left_join(Val_site_tax, by="CSIR_Pit")
+```
+
+
+# EPA pedon data
+```{r}
+pedon_test_list <- unique(EPA_Soil_Data$Pedon_ID)
+GH.profiles.epa <- list(list())
+
+#Progress combine function
+n <- length(pedon_test_list)
+pb <- txtProgressBar(min = 1, max = n, style=3)
+
+stime <- system.time({ 
+GH.profiles.epa <- foreach(i= 1:length(pedon_test_list), .packages = c("stringr", "dplyr", "tidyr", "XML", "reticulate", "purrr", "jsonlite")) %do% {
+  setTxtProgressBar(pb, i)
+  tryCatch({
+      pedon <- EPA_Soil_Data %>% dplyr::filter(Pedon_ID==pedon_test_list[i])
+      pedon$texture <- pedon$texture %>% replace_na("")
+      pedon$rfv_class <- pedon$rfv_class %>% replace_na("")
+      if (length(as.character(pedon$texture))>1) {
+        soilHorizon=as.character(pedon$texture)
+      } else {
+        soilHorizon=list(as.character(pedon$texture))
+      }
+      if (length(pedon$rfv_class)>1) {
+        rfvDepth=pedon$rfv_class
+      } else {
+        rfvDepth=list(pedon$rfv_class)
+      }
+      if (length(as.integer(pedon$bottom))>1) {
+        horizonDepth=as.integer(pedon$bottom)
+      } else {
+        horizonDepth=list(as.integer(pedon$bottom))
+      }
+      lon=as.numeric(unique(pedon$longitude))
+      lat=as.numeric(unique(pedon$latitude))
+      if (is.na(as.numeric(unique(pedon$bedrock_depth)))){
+        bedrock = NULL
+      } else {
+        bedrock = as.numeric(unique(pedon$bedrock_depth))
+      }
+      plot_id <- unique(pedon$Pedon_ID)
+      # lab_Color <- list(list())
+      # for(j in 1:nrow(pedon)){
+      #   lab_Color[j] <- list(c(pedon$D.L[j], pedon$D.a[j], pedon$D.b[j]))
+      # }
+      # base.url.list1 <-"http://127.0.0.1:5000/api/v1/soilidlist?"
+      # base.url.rank1 <-"http://127.0.0.1:5000/api/v1/soilidrank?"
+      base.url.list2 <-"http://127.0.0.1:5000/api/v2/soilidlist?"
+      base.url.rank2 <-"http://127.0.0.1:5000/api/v2/soilidrank?"
+      depth.text <- ""
+      for(j in 1:length(horizonDepth)){
+        depth <- paste0("&soilHorizon", j, "_Depth=", horizonDepth[j])
+        if(str_detect(toupper(soilHorizon[j]), " ")==TRUE){
+            text <- paste0("&soilHorizon", j, "=", str_replace_all(toupper(soilHorizon[j]), " ", "%20"))
+        } else {
+          text <- paste0("&soilHorizon", j, "=", toupper(soilHorizon[j]))
+        }
+        RFV <- paste0("&soilHorizon", j, "_RFV=", rfvDepth[j])
+        depth.text <- paste0(depth.text, depth, text, RFV)
+      }
+      # depth.color <- ""
+      # for(j in 1:length(lab_Color)){
+      #   color <- paste0("&soilHorizon", j, "_LAB=", paste0(lab_Color[[j]], collapse =","))
+      #   depth.color <- paste0(depth.color, color)
+      # }
+      # url.list1 <- paste0(base.url.list1, "longitude=", lon, "&latitude=", lat)
+      # url.rank1 <- paste0(base.url.rank1, "longitude=", lon, "&latitude=", lat, depth.text, "&cracks=False")#,"&slope=",pSlope, depth.color)
+      url.list2 <- paste0(base.url.list2, "longitude=", lon, "&latitude=", lat, "&plot_id=", plot_id)
+      url.rank2 <- paste0(base.url.rank2, "longitude=", lon, "&latitude=", lat, depth.text, "&cracks=False&plot_id=", plot_id)#,"&slope=",pSlope, depth.color)
+      querry_time <- system.time({
+      # result_list1 <- possibly(fromJSON, "Failed")(url.list1, simplifyDataFrame =TRUE)  
+      # result_out1 <- possibly(fromJSON, "Failed")(url.rank1, simplifyDataFrame = TRUE)
+      result_list2 <- possibly(fromJSON, "Failed")(url.list2, simplifyDataFrame =TRUE)  
+      result_out2 <- possibly(fromJSON, "Failed")(url.rank2, simplifyDataFrame = TRUE)
+      })[3]
+      SoilID_compID <-  result_out2$soilRank %>% dplyr::filter(rank_data==1) %>% dplyr::select(componentID) %>% set_names('SoilID_compID')
+      Dom_compID <-  result_out2$soilRank %>% dplyr::filter(rank_loc==1) %>% dplyr::select(componentID) %>% set_names('Dom_compID')
+      Pedon_id <- data.frame(unique(pedon$Pedon_ID)) %>% set_names('Pedon_ID')
+      GH.profiles.epa[[i]] <- cbind(Pedon_id,Dom_compID,SoilID_compID)
+    }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+}
+close(pb)
+})[3]
+stime
+
+GH.profiles.epa.df <- bind_rows(GH.profiles.epa)
+
+```
+
+
+# validation pedon data
+```{r}
+pedon_test_list <- unique(Validation_Soil_Data$Pedon_ID)
+GH.profiles.val <- list(list())
+
+#Progress combine function
+n <- length(pedon_test_list)
+pb <- txtProgressBar(min = 1, max = n, style=3)
+
+stime <- system.time({ 
+GH.profiles.val <- foreach(i= 1:length(pedon_test_list), .packages = c("stringr", "dplyr", "tidyr", "XML", "reticulate", "purrr", "jsonlite")) %do% {
+  setTxtProgressBar(pb, i)
+  tryCatch({
+      pedon <- Validation_Soil_Data %>% dplyr::filter(Pedon_ID==pedon_test_list[i])
+      pedon$texture <- pedon$texture %>% replace_na("")
+      pedon$rfv_class <- pedon$rfv_class %>% replace_na("")
+      if (length(as.character(pedon$texture))>1) {
+        soilHorizon=as.character(pedon$texture)
+      } else {
+        soilHorizon=list(as.character(pedon$texture))
+      }
+      if (length(pedon$rfv_class)>1) {
+        rfvDepth=pedon$rfv_class
+      } else {
+        rfvDepth=list(pedon$rfv_class)
+      }
+      if (length(as.integer(pedon$bottom))>1) {
+        horizonDepth=as.integer(pedon$bottom)
+      } else {
+        horizonDepth=list(as.integer(pedon$bottom))
+      }
+      lon=as.numeric(unique(pedon$longitude))
+      lat=as.numeric(unique(pedon$latitude))
+      if (is.na(as.numeric(unique(pedon$bedrock_depth)))){
+        bedrock = NULL
+      } else {
+        bedrock = as.numeric(unique(pedon$bedrock_depth))
+      }
+      plot_id <- unique(pedon$Pedon_ID)
+      # lab_Color <- list(list())
+      # for(j in 1:nrow(pedon)){
+      #   lab_Color[j] <- list(c(pedon$D.L[j], pedon$D.a[j], pedon$D.b[j]))
+      # }
+      # base.url.list1 <-"http://127.0.0.1:5000/api/v1/soilidlist?"
+      # base.url.rank1 <-"http://127.0.0.1:5000/api/v1/soilidrank?"
+      base.url.list2 <-"http://127.0.0.1:5000/api/v2/soilidlist?"
+      base.url.rank2 <-"http://127.0.0.1:5000/api/v2/soilidrank?"
+      depth.text <- ""
+      for(j in 1:length(horizonDepth)){
+        depth <- paste0("&soilHorizon", j, "_Depth=", horizonDepth[j])
+        if(str_detect(toupper(soilHorizon[j]), " ")==TRUE){
+            text <- paste0("&soilHorizon", j, "=", str_replace_all(toupper(soilHorizon[j]), " ", "%20"))
+        } else {
+          text <- paste0("&soilHorizon", j, "=", toupper(soilHorizon[j]))
+        }
+        RFV <- paste0("&soilHorizon", j, "_RFV=", rfvDepth[j])
+        depth.text <- paste0(depth.text, depth, text, RFV)
+      }
+      # depth.color <- ""
+      # for(j in 1:length(lab_Color)){
+      #   color <- paste0("&soilHorizon", j, "_LAB=", paste0(lab_Color[[j]], collapse =","))
+      #   depth.color <- paste0(depth.color, color)
+      # }
+      # url.list1 <- paste0(base.url.list1, "longitude=", lon, "&latitude=", lat)
+      # url.rank1 <- paste0(base.url.rank1, "longitude=", lon, "&latitude=", lat, depth.text, "&cracks=False")#,"&slope=",pSlope, depth.color)
+      url.list2 <- paste0(base.url.list2, "longitude=", lon, "&latitude=", lat, "&plot_id=", plot_id)
+      url.rank2 <- paste0(base.url.rank2, "longitude=", lon, "&latitude=", lat, depth.text, "&cracks=False&plot_id=", plot_id)#,"&slope=",pSlope, depth.color)
+      querry_time <- system.time({
+      # result_list1 <- possibly(fromJSON, "Failed")(url.list1, simplifyDataFrame =TRUE)  
+      # result_out1 <- possibly(fromJSON, "Failed")(url.rank1, simplifyDataFrame = TRUE)
+      result_list2 <- possibly(fromJSON, "Failed")(url.list2, simplifyDataFrame =TRUE)  
+      result_out2 <- possibly(fromJSON, "Failed")(url.rank2, simplifyDataFrame = TRUE)
+      })[3]
+      SoilID_compID <-  result_out2$soilRank %>% dplyr::filter(rank_data==1) %>% dplyr::select(componentID) %>% set_names('SoilID_compID')
+      Dom_compID <-  result_out2$soilRank %>% dplyr::filter(rank_loc==1) %>% dplyr::select(componentID) %>% set_names('Dom_compID')
+      Pedon_id <- data.frame(unique(pedon$Pedon_ID)) %>% set_names('Pedon_ID')
+      GH.profiles.val[[i]] <- cbind(Pedon_id,Dom_compID,SoilID_compID)
+    }, error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
+}
+close(pb)
+})[3]
+stime
+
+GH.profiles.val.df <- bind_rows(GH.profiles.val)
+
+```
+
+
+# Run GAEZ SQ on validation sites for Cocoa
+```{r}
+# Ghana cocoa Low level rain-fed
+library(reticulate)
+use_python("C:/Users/jmaynard/anaconda3/python.exe")
+reticulate::source_python("C:/LandPKS_API_SoilID-master/model/GAEZ_soilID_functions_lab-data.py")
+
+SQI_dom_L <- list(list())
+SQI_id_L <- list(list())
+SQI_id_loc_L_epa <- list(list())
+SQI_id_loc_L_val <- list(list())
+SQI_id_loc_L_val_lab <- list(list())
+
+for(i in 1:nrow(GH.profiles.val.df)){
+  pedon_epa <- EPA_Soil_Data %>% dplyr::filter(Pedon_ID==GH.profiles.val.df$Pedon_ID[i])
+  pedon_val <- Validation_Soil_Data %>% dplyr::filter(Pedon_ID==GH.profiles.val.df$Pedon_ID[i])
+  SQI_dom_L[[i]] <- GAEZ_SQI(COMPID=GH.profiles.val.df[i,]$Dom_compID, CROP_ID='49a', inputLevel='L', depthWt_type=2)
+  SQI_id_L[[i]] <- GAEZ_SQI(COMPID=GH.profiles.val.df[i,]$SoilID_compID, CROP_ID='49a', inputLevel='L', depthWt_type=2)
+  SQI_id_loc_L_epa[[i]] <- GAEZ_SQI(COMPID=GH.profiles.val.df[i,]$SoilID_compID, CROP_ID='49a', inputLevel='L', depthWt_type=2, plot_data=pedon_epa, site_data=pedon_epa)
+  SQI_id_loc_L_val[[i]] <- GAEZ_SQI(COMPID=GH.profiles.val.df[i,]$SoilID_compID, CROP_ID='49a', inputLevel='L', depthWt_type=2, plot_data=pedon_val, site_data=pedon_val)
+  SQI_id_loc_L_val_lab[[i]] <- GAEZ_SQI(COMPID=GH.profiles.val.df[i,]$SoilID_compID, CROP_ID='49a', inputLevel='L', depthWt_type=2, plot_data=pedon_val, site_data=pedon_val, lab_data=pedon_val)
+}
+
+
+SQI_dom_L_df <-  bind_rows(SQI_dom_L)
+SQI_dom_L_df <-  SQI_dom_L_df %>% dplyr::mutate(PedonID = GH.profiles.val.df$Pedon_ID) %>% dplyr::select(PedonID, SQ1_dom=SQ1, SQ2_dom=SQ2, SQ3_dom=SQ3, SQ4_dom=SQ4, SQ5_dom=SQ5, SQ6_dom=SQ6, SQ7_dom=SQ7, SR_dom=SR, Input_Level = `Input Level`, SoilTax_dom=`Soil Tax`)
+
+SQI_id_L_df <-  bind_rows(SQI_id_L)
+SQI_id_L_df <-  SQI_id_L_df %>% dplyr::mutate(PedonID = GH.profiles.val.df$Pedon_ID) %>% dplyr::select(PedonID, SQ1_id=SQ1, SQ2_id=SQ2, SQ3_id=SQ3, SQ4_id=SQ4, SQ5_id=SQ5, SQ6_id=SQ6, SQ7_id=SQ7, SR_id=SR, Input_Level = `Input Level`, SoilTax_id=`Soil Tax`)
+
+SQI_id_loc_L_df_epa <-  bind_rows(SQI_id_loc_L_epa)
+SQI_id_loc_L_df_epa <-  SQI_id_loc_L_df_epa %>% dplyr::mutate(PedonID = GH.profiles.val.df$Pedon_ID) %>% dplyr::select(PedonID, SQ1_id_loc_epa=SQ1, SQ2_id_loc_epa=SQ2, SQ3_id_loc_epa=SQ3, SQ4_id_loc_epa=SQ4, SQ5_id_loc_epa=SQ5, SQ6_id_loc_epa=SQ6, SQ7_id_loc_epa=SQ7, SR_id_loc_epa=SR, Input_Level = `Input Level`, SoilTax_id_loc_epa=`Soil Tax`)
+
+SQI_id_loc_L_df_val <-  bind_rows(SQI_id_loc_L_val)
+SQI_id_loc_L_df_val <-  SQI_id_loc_L_df_val %>% dplyr::mutate(PedonID = GH.profiles.val.df$Pedon_ID) %>% dplyr::select(PedonID, SQ1_id_loc=SQ1, SQ2_id_loc=SQ2, SQ3_id_loc=SQ3, SQ4_id_loc=SQ4, SQ5_id_loc=SQ5, SQ6_id_loc=SQ6, SQ7_id_loc=SQ7, SR_id_loc=SR, Input_Level = `Input Level`, SoilTax_id_loc=`Soil Tax`)
+
+SQI_id_loc_L_df_val_lab <-  bind_rows(SQI_id_loc_L_val_lab)
+SQI_id_loc_L_df_val_lab <-  SQI_id_loc_L_df_val_lab %>% dplyr::mutate(PedonID = GH.profiles.val.df$Pedon_ID) %>% dplyr::select(PedonID, SQ1_id_loc_lab=SQ1, SQ2_id_loc_lab=SQ2, SQ3_id_loc_lab=SQ3, SQ4_id_loc_lab=SQ4, SQ5_id_loc_lab=SQ5, SQ6_id_loc_lab=SQ6, SQ7_id_loc_lab=SQ7, SR_id_loc_lab=SR, Input_Level = `Input Level`, SoilTax_id_loc_lab=`Soil Tax`)
+
+LandPKS_SQI_L <- SQI_dom_L_df %>% full_join(SQI_id_loc_L_df_epa, by=c('PedonID', 'Input_Level')) %>% full_join(SQI_id_loc_L_df_val, by=c('PedonID', 'Input_Level')) %>% full_join(SQI_id_loc_L_df_val_lab, by=c('PedonID', 'Input_Level')) %>% dplyr::select(PedonID,Input_Level, SoilTax_dom, SoilTax_id_loc_epa, SoilTax_id_loc, SoilTax_id_loc_lab, SQ1_dom, SQ1_id_loc_epa, SQ1_id_loc, SQ1_id_loc_lab, SQ2_dom, SQ2_id_loc_epa, SQ2_id_loc, SQ2_id_loc_lab, SQ3_dom, SQ3_id_loc_epa, SQ3_id_loc, SQ3_id_loc_lab, SQ4_dom, SQ4_id_loc_epa, SQ4_id_loc, SQ4_id_loc_lab, SQ5_dom, SQ5_id_loc_epa, SQ5_id_loc, SQ5_id_loc_lab, SQ6_dom, SQ6_id_loc_epa, SQ6_id_loc, SQ6_id_loc_lab, SQ7_dom, SQ7_id_loc_epa, SQ7_id_loc, SQ7_id_loc_lab, SR_dom, SR_id_loc_epa, SR_id_loc, SR_id_loc_lab)
+
+
+Ghana_aez <- LandPKS_SQI_L %>% dplyr::select(id=PedonID, Input_Level, SR_dom, SR_id_loc_epa, SR_id_loc, SR_id_loc_lab) %>% pivot_longer(cols=SR_dom:SR_id_loc_lab, names_to = 'source', values_to='SR')
+
+Ghana_aez$source <- factor(Ghana_aez$source, levels = c('SR_dom', 'SR_id_loc_epa', 'SR_id_loc', 'SR_id_loc_lab'))
+
+Ghana_aez %>% dplyr::group_by(source) %>% dplyr::summarize(mean(SR, na.rm=T), sd(SR, na.rm=T))
+Ghana_aez_sub <- Ghana_aez %>% dplyr::filter(!source=='SR_id')
+
+Ghana_aez_sub <- Ghana_aez_sub %>% rowwise() %>% dplyr::mutate(SC = S_Class(SR))
+Ghana_aez_sub$SC <- factor(Ghana_aez_sub$SC, order = TRUE, levels =  c( "S0", "S1", "S2", "S3", "S4", "N"))
+
+
+# Draw the basic boxplot
+pdf(here("results/figures/Ghana_AEZ_boxplot_cocoa.pdf"), width = 6.5, height = 4.5)
+a <- boxplot(Ghana_aez$SR ~ Ghana_aez$source , ylim=c(0,100), ylab="Soil Suitability" , xlab="Data Source" ,main="Cocoa Soil Suitability")
+dev.off()
+
+col_bl <- c("#4575b4","#91bfdb", "#e0f3f8", "#fee090", "#fc8d59", "#d73027")
+agg <- count(Ghana_aez_sub %>% dplyr::group_by(source), SC)  
+pdf(here("results/figures/Ghana_AEZ_barplot_cocoa.pdf"), width = 6.5, height = 4.5)
+  ggplot(agg) +
+      geom_col(aes(x = source, y = n, fill = SC)) +
+      scale_fill_manual(values = col_bl)
+  
+dev.off() 
+
+```
+
+
+# Run GAEZ SQ on validation sites for Maize
+```{r}
+# Ghana maize Low level rain-fed
+reticulate::source_python("C:/LandPKS_API_SoilID-master/model/GAEZ_soilID_functions_lab-data.py")
+
+SQI_dom_L <- list(list())
+SQI_id_L <- list(list())
+SQI_id_loc_L_epa <- list(list())
+SQI_id_loc_L_val <- list(list())
+SQI_id_loc_L_valv <- list(list())
+
+for(i in 1:nrow(GH.profiles.val.df)){
+  pedon_epa <- EPA_Soil_Data %>% dplyr::filter(Pedon_ID==GH.profiles.val.df$Pedon_ID[i])
+  pedon_val <- Validation_Soil_Data %>% dplyr::filter(Pedon_ID==GH.profiles.val.df$Pedon_ID[i])
+  SQI_dom_L[[i]] <- GAEZ_SQI(COMPID=GH.profiles.val.df[i,]$Dom_compID, CROP_ID='4', inputLevel='L', depthWt_type=1)
+  SQI_id_L[[i]] <- GAEZ_SQI(COMPID=GH.profiles.val.df[i,]$SoilID_compID, CROP_ID='4', inputLevel='L', depthWt_type=1)
+  SQI_id_loc_L_epa[[i]] <- GAEZ_SQI(COMPID=GH.profiles.val.df[i,]$SoilID_compID, CROP_ID='4', inputLevel='L', depthWt_type=1, plot_data=pedon_epa, site_data=pedon_epa)
+  SQI_id_loc_L_val[[i]] <- GAEZ_SQI(COMPID=GH.profiles.val.df[i,]$SoilID_compID, CROP_ID='4', inputLevel='L', depthWt_type=1, plot_data=pedon_val, site_data=pedon_val)
+  SQI_id_loc_L_val_lab[[i]] <- GAEZ_SQI(COMPID=GH.profiles.val.df[i,]$SoilID_compID, CROP_ID='4', inputLevel='L', depthWt_type=1, plot_data=pedon_val, site_data=pedon_val, lab_data=pedon_val)
+}
+
+# SQI_id_loc_L <- list(list())
+# for(i in 1:nrow(GH.profiles.val.df)){
+#   pedon <- LPKS_soil_profile_gh %>% dplyr::filter(id==GH.profiles.val.df$Pedon_ID[i])
+#   SQI_id_loc_L[[i]] <- GAEZ_SQI(COMPID=GH.profiles.val.df[i,]$SoilID_compID, CROP_ID='4', inputLevel='L', depthWt_type=1, plot_data=pedon)
+# }
+
+SQI_dom_L_df <-  bind_rows(SQI_dom_L)
+SQI_dom_L_df <-  SQI_dom_L_df %>% dplyr::mutate(PedonID = GH.profiles.val.df$Pedon_ID) %>% dplyr::select(PedonID, SQ1_dom=SQ1, SQ2_dom=SQ2, SQ3_dom=SQ3, SQ4_dom=SQ4, SQ5_dom=SQ5, SQ6_dom=SQ6, SQ7_dom=SQ7, SR_dom=SR, Input_Level = `Input Level`, SoilTax_dom=`Soil Tax`)
+
+SQI_id_L_df <-  bind_rows(SQI_id_L)
+SQI_id_L_df <-  SQI_id_L_df %>% dplyr::mutate(PedonID = GH.profiles.val.df$Pedon_ID) %>% dplyr::select(PedonID, SQ1_id=SQ1, SQ2_id=SQ2, SQ3_id=SQ3, SQ4_id=SQ4, SQ5_id=SQ5, SQ6_id=SQ6, SQ7_id=SQ7, SR_id=SR, Input_Level = `Input Level`, SoilTax_id=`Soil Tax`)
+
+SQI_id_loc_L_df_epa <-  bind_rows(SQI_id_loc_L_epa)
+SQI_id_loc_L_df_epa <-  SQI_id_loc_L_df_epa %>% dplyr::mutate(PedonID = GH.profiles.val.df$Pedon_ID) %>% dplyr::select(PedonID, SQ1_id_loc_epa=SQ1, SQ2_id_loc_epa=SQ2, SQ3_id_loc_epa=SQ3, SQ4_id_loc_epa=SQ4, SQ5_id_loc_epa=SQ5, SQ6_id_loc_epa=SQ6, SQ7_id_loc_epa=SQ7, SR_id_loc_epa=SR, Input_Level = `Input Level`, SoilTax_id_loc_epa=`Soil Tax`)
+
+SQI_id_loc_L_df_val <-  bind_rows(SQI_id_loc_L_val)
+SQI_id_loc_L_df_val <-  SQI_id_loc_L_df_val %>% dplyr::mutate(PedonID = GH.profiles.val.df$Pedon_ID) %>% dplyr::select(PedonID, SQ1_id_loc=SQ1, SQ2_id_loc=SQ2, SQ3_id_loc=SQ3, SQ4_id_loc=SQ4, SQ5_id_loc=SQ5, SQ6_id_loc=SQ6, SQ7_id_loc=SQ7, SR_id_loc=SR, Input_Level = `Input Level`, SoilTax_id_loc=`Soil Tax`)
+
+SQI_id_loc_L_df_val_lab <-  bind_rows(SQI_id_loc_L_val_lab)
+SQI_id_loc_L_df_val_lab <-  SQI_id_loc_L_df_val_lab %>% dplyr::mutate(PedonID = GH.profiles.val.df$Pedon_ID) %>% dplyr::select(PedonID, SQ1_id_loc_lab=SQ1, SQ2_id_loc_lab=SQ2, SQ3_id_loc_lab=SQ3, SQ4_id_loc_lab=SQ4, SQ5_id_loc_lab=SQ5, SQ6_id_loc_lab=SQ6, SQ7_id_loc_lab=SQ7, SR_id_loc_lab=SR, Input_Level = `Input Level`, SoilTax_id_loc_lab=`Soil Tax`)
+
+LandPKS_SQI_L <- SQI_dom_L_df %>% full_join(SQI_id_loc_L_df_epa, by=c('PedonID', 'Input_Level')) %>% full_join(SQI_id_loc_L_df_val, by=c('PedonID', 'Input_Level')) %>% full_join(SQI_id_loc_L_df_val_lab, by=c('PedonID', 'Input_Level')) %>% dplyr::select(PedonID,Input_Level, SoilTax_dom, SoilTax_id_loc_epa, SoilTax_id_loc, SoilTax_id_loc_lab, SQ1_dom, SQ1_id_loc_epa, SQ1_id_loc, SQ1_id_loc_lab, SQ2_dom, SQ2_id_loc_epa, SQ2_id_loc, SQ2_id_loc_lab, SQ3_dom, SQ3_id_loc_epa, SQ3_id_loc, SQ3_id_loc_lab, SQ4_dom, SQ4_id_loc_epa, SQ4_id_loc, SQ4_id_loc_lab, SQ5_dom, SQ5_id_loc_epa, SQ5_id_loc, SQ5_id_loc_lab, SQ6_dom, SQ6_id_loc_epa, SQ6_id_loc, SQ6_id_loc_lab, SQ7_dom, SQ7_id_loc_epa, SQ7_id_loc, SQ7_id_loc_lab, SR_dom, SR_id_loc_epa, SR_id_loc, SR_id_loc_lab)
+
+
+Ghana_aez <- LandPKS_SQI_L %>% dplyr::select(id=PedonID, Input_Level, SR_dom, SR_id_loc_epa, SR_id_loc, SR_id_loc_lab) %>% pivot_longer(cols=SR_dom:SR_id_loc_lab, names_to = 'source', values_to='SR')
+
+
+Ghana_aez$source <- factor(Ghana_aez$source, levels = c('SR_dom', 'SR_id_loc_epa', 'SR_id_loc', 'SR_id_loc_lab'))
+
+Ghana_aez %>% dplyr::group_by(source) %>% dplyr::summarize(mean(SR, na.rm=T), sd(SR, na.rm=T))
+Ghana_aez_sub <- Ghana_aez %>% dplyr::filter(!source=='SR_id')
+
+Ghana_aez_sub <- Ghana_aez_sub %>% rowwise() %>% dplyr::mutate(SC = S_Class(SR))
+Ghana_aez_sub$SC <- factor(Ghana_aez_sub$SC, order = TRUE, levels =  c( "S0", "S1", "S2", "S3", "S4", "N"))
+
+
+# Draw the basic boxplot
+pdf(here("results/figures/Ghana_AEZ_boxplot_maize.pdf"), width = 6.5, height = 4.5)
+a <- boxplot(Ghana_aez$SR ~ Ghana_aez$source , ylim=c(0,100), ylab="Soil Suitability" , xlab="Data Source" ,main="Maize Soil Suitability")
+
+
+col_bl <- c("#4575b4","#91bfdb", "#e0f3f8", "#fee090", "#fc8d59", "#d73027")
+agg <- count(Ghana_aez_sub %>% dplyr::group_by(source), SC)  
+pdf(here("results/figures/Ghana_AEZ_barplot_maize.pdf"), width = 6.5, height = 4.5)
+  p1 <- ggplot(agg) +
+      geom_col(aes(x = source, y = n, fill = SC)) +
+      scale_fill_manual(values = col_bl)
+  p1
+dev.off() 
+```
+
+
+
+
+
+
+```{r}
+prof <- GAEZ_SQI(COMPID=GH.profiles.val.df[i,]$Dom_compID, CROP_ID='4', inputLevel='L', depthWt_type=1)
+
+prof$CECc*(prof$CLPC/100) + (300*(prof$ORGC*.001))
+
+CECs <- (prof$CECS - (250*(prof$ORGC*.001)))/(prof$CLPC/100)
+
+```
+
+
+
+# Pedotransfer calculation of reference bulk density (Saxton et al. [1986])
+## Reference bulk density
+Porosity @ sat (SAT) = =0.332-0.0007251*Sand+0.1276*LOG10(Clay)
+Db = (1-SAT) * 2.65
+
+# Pedotransfer calculation of actual bulk density (Saxton and Rawls [2006])
+## Bulk density accounting for texture, OM, and gravel
+
+1st Field Capacity step (%v) = Ɵ33t = 	-0.251 * (SAND) + 0.195 * (CLAY) + 0.011 * (OM) + 
+					0.006 * (SAND) * (OM) - 0.027 * (CLAY) * (OM) +
+					0.452 * (SAND) * (CLAY) + 0.299
+
+Field Capacity solution (%v) = Ɵ33 =	Ɵ33t + (1.283 * Ɵ33t * Ɵ33t - 0.374 * Ɵ33t - 0.015)
+
+1st Saturated Field Capacity step (%v) = Ɵ(S-33)t = 0.278 * (SAND) + 0.034 * (CLAY) + 0.022 * (OM) – 
+				0.018 * (SAND) * (OM) - 0.027 * (CLAY) * (OM) – 
+				0.584 * (SAND) * (CLAY) + 0.078
+
+Saturated Field Capacity Solution (%v) = Ɵ(S-33) = Ɵ(S-33)t + ( ( 0.636 * Ɵ(S-33)t ) – 0.107 )
+
+Sand Adjustment Saturated Conductivity = Ɵs = Ɵ33 + Ɵ(S-33) – 0.097 * (SAND) + 0.043
+
+Matric soil density w/ OM  = (ρN)	= ( 1-  Ɵs ) * 2.65
+
+Bulk soil density w/ gravel = (ρB) = ( 1 - ( GC ) ) / ( 1 - ( GC ) *( 1 - 1.5 * ( ρN /2.65) ) )
+
+```{r}
+#Function to calculate ref bulk density (based on Saxton et al. 1986)
+act_bulk <- function(SAND, OM, CLAY, RFV){
+  fc1 <- -0.251 * (SAND) + 0.195 * (CLAY) + 0.011 * (OM) + 0.006 * (SAND) * (OM) - 0.027 * (CLAY) * (OM) + 0.452 * (SAND) * (CLAY) + 0.299
+  fc <- fc1 + (1.283 * fc1^2 - 0.374 * fc1 - 0.015)
+  sfc1 <- 0.278 * (SAND) + 0.034 * (CLAY) + 0.022 * (OM) - 0.018 * (SAND) * (OM) - 0.027 * (CLAY) * (OM) - 0.584 * (SAND) * (CLAY) + 0.078
+  sfc <- sfc1 + ((0.636 * sfc1) - 0.107)
+  sasc <- fc + sfc - 0.097 * (SAND) + 0.043
+  md <- ( 1 - sasc ) * 2.65
+  Db <- md*( 1 - RFV) + (RFV * 2.65)
+  return(Db)
+}
+act_bulk(.80, .1, .15, .50)
+
+
+
+SAND = .82
+OM = 1
+CLAY= .06
+RFV = .25
+
+
+#revised code
+fc1 <- -0.251 * (SAND) + 0.195 * (CLAY) + 0.011 * (OM) + 0.006 * (SAND) * (OM) - 0.027 * (CLAY) * (OM) + 0.452 * (SAND) * (CLAY) + 0.299
+fc <- fc1 + (1.283 * fc1^2 - 0.374 * fc1 - 0.015)
+sfc1 <- 0.278 * (SAND) + 0.034 * (CLAY) + 0.022 * (OM) - 0.018 * (SAND) * (OM) - 0.027 * (CLAY) * (OM) - 0.584 * (SAND) * (CLAY) + 0.078
+sfc <- sfc1 + ((0.636 * sfc1) - 0.107)
+sasc <- fc + sfc - 0.097 * (SAND) + 0.043
+md <- ( 1 - sasc ) * 2.65
+Db <- md*( 1 - RFV) + (RFV * 2.65)
+fifteen_t <- -0.024 * (SAND) + 0.487 * (CLAY) + 0.006 * (OM) + 0.005 * (SAND) * (OM) - 0.013 * (CLAY) * (OM) + 0.068 * (SAND) * (CLAY) + 0.031
+fifteen <- fifteen_t + (0.14 * fifteen_t - 0.02)
+lambda = (log(fc)- log(fifteen))/ (log(1500) - log(33))
+RFw = RFV / ( (md / 2.65 ) + RFV * ( 1 - (md / 2.65 ) ) )
+KbKs   =     ( 1 -  RFw  ) / ( 1 - RFw  *( 1 - 1.5 * (md / 2.65) ) )
+
+
+inf1 <- 1930 * (sasc - fc)^(3- lambda) * KbKs
+awc1 <- (fc - fifteen) * (1 - (RFV)) * 20
+
+
+#old code
+fc1 <- -0.251 * (SAND) + 0.195 * (CLAY) + 0.011 * (OM) + 0.006 * (SAND) * (OM) - 0.027 * (CLAY) * (OM) + 0.452 * (SAND) * (CLAY) + 0.299
+fc <- fc1 + (1.283 * fc1^2 - 0.374 * fc1 - 0.015)
+fc_scale = fc*100
+sfc1 <- 0.278 * (SAND) + 0.034 * (CLAY) + 0.022 * (OM) - 0.018 * (SAND) * (OM) - 0.027 * (CLAY) * (OM) - 0.584 * (SAND) * (CLAY) + 0.078
+sfc <- sfc1 + ((0.636 * sfc1) - 0.107)
+sasc <- fc + sfc - 0.097 * (SAND) + 0.043
+md <- ( 1 - sasc ) * 2.65
+
+gravels_AB = ((md/2.65)*RFV)/(1-RFV*(1-md/2.65))
+
+
+Db <- md*( 1 - gravels_AB) + (gravels_AB * 2.65)
+fifteen_t <- -0.024 * (SAND) + 0.487 * (CLAY) + 0.006 * (OM) + 0.005 * (SAND) * (OM) - 0.013 * (CLAY) * (OM) + 0.068 * (SAND) * (CLAY) + 0.031
+fifteen <- fifteen_t + (0.14 * fifteen_t - 0.02)
+fifteen_scale <- fifteen *100
+lambda = abs(log(fifteen)- log(fc))/ (log(1500) - log(33))
+#RFw = RFV / ( (md / 2.65 ) + RFV * ( 1 - (md / 2.65 ) ) )
+bds   =     ( 1 -  RFV  ) / ( 1 - RFV  *( 1 - 1.5 * (md / 2.65) ) )
+poc = (1 - (md/2.65))
+
+inf2 <- 1930 * (sasc - fc)^(3- lambda) * bds
+awc2 <- (fc - fifteen) * (1 - (gravels_AB)) * 20
+
+
+
+
+Loamy Sand
+
+
+
+
+
+
+
+```
+
+# Code to calculate the modified Fournier Index
+```{r}
+dtm_slope_merit.dem_m_250m_s0..0cm_2017_v1.0.tif
+
+in.tif.lst ="/vsicurl/https://s3.eu-central-1.wasabisys.com/africa-soil/layers30m/dtm_slope_aw3d30.nasadem_m_30m_s0..0cm_2017_africa_proj.laea_v0.1.tif"
+
+
+in.tif.lst ="/vsicurl/https://s3.eu-central-1.wasabisys.com/openlandmap/layers250m/dtm_slope_merit.dem_m_250m_s0..0cm_2017_v1.0.tif"
+library(terra)
+
+in.tif.lst = paste0("/vsicurl/https://s3.eu-central-1.wasabisys.com/openlandmap/layers1km/",
+      "clm_precipitation_sm2rain.", c("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"), 
+      "_m_1km_s0..0cm_2007..2018_v0.2.tif")
+xy.lst = data.frame(lon=c(4.057, 11.360, 17.911, 10.208, 16.273, -3.799, -1.148, -8.180, 20.833, 16.676),
+           lat=c(50.3871, 61.962, 47.252, 46.276, 40.605, 38.335, 52.572, 53.591, 42.077, 51.347))
+ov = parallel::mclapply(in.tif.lst, function(i){terra::extract(rast(i), xy.lst)}, mc.cores = 10)
+
+
+xy = data.frame(lon=-3.799, lat=38.335)
+
+ov = lapply(in.tif.lst, function(i){terra::extract(rast(i), xy.lst)})
+t(bind_cols(ov))
+
+# mfi = sum(monthly prec^2)/Annual P
+mfi <- function(data){
+  
+  
+  
+  
+}
+```
+

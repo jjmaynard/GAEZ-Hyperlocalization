@@ -1,0 +1,331 @@
+---
+title: "Ghana Soil Map Comparison Cocoa Areas"
+output: html_notebook
+---
+
+```{r message=FALSE, warning=FALSE}
+#set libary path
+required.packages <- c("sf", "readr", "dplyr", "tidyr", "purrr", "reticulate", "Rcpp", "foreach", "stringr", "tcltk", "utils", "iterators", "httr", "jsonlite", "doParallel", "here", "raster", "aqp", "GSIF")
+new.packages <- required.packages[!(required.packages %in% installed.packages()[, 
+    "Package"])]
+if (length(new.packages)) install.packages(new.packages)
+lapply(required.packages, require, character.only = T)
+rm(required.packages, new.packages)
+
+
+no_cores <- detectCores() - 1  
+cl <- makeCluster(no_cores, type="SOCK", outfile = "")  
+registerDoParallel(cl)  
+getDoParWorkers()
+#options(stringsAsFactors = FALSE)
+#stopCluster(cl)
+```
+
+
+# Load in results from 'LandPKS_Ghana_Profile_Compare.Rmd' analysis.
+```{r}
+Ghana_LPKS_Map_Compare_rev <- readRDS('C:/R_Drive/Data_Files/LPKS_Data/R_Projects/LPKS.Ghana/data/derived_data/Ghana_LPKS_Map_Compare_DF_rev.RDS')
+
+#load in processed LandPKS data
+EPA_Soil_Data <- readRDS('C:/R_Drive/Data_Files/LPKS_Data/R_Projects/LPKS.Ghana/data/private_data/Ghana_LPKS_Soil_Data.rds')
+EPA_Soil_Data <- EPA_Soil_Data %>% dplyr::select(id, name, bedrock_depth, cracks, bottom, texture, rfv_class, soil_color, latitude, longitude) %>% mutate(bedrock_depth = as.integer(bedrock_depth))
+
+EPA_Soil_Data_id <- EPA_Soil_Data %>% dplyr::select(id) %>% distinct() %>% pull()
+#subset results based on Cocoa sites
+Ghana_LPKS_Map_Compare_cocoa <- Ghana_LPKS_Map_Compare_rev %>% ungroup() %>% filter(id %in% EPA_Soil_Data_id)
+
+```
+
+```{r}
+#Plotting functions
+library(ggplot2)
+library(multcompView)
+# I need to group the treatments that are not different each other together.
+generate_label_df <- function(TUKEY, variable){
+ 
+     # Extract labels and factor levels from Tukey post-hoc 
+     Tukey.levels <- TUKEY[[variable]][,4]
+     Tukey.labels <- data.frame(multcompLetters(Tukey.levels)['Letters'])
+     
+     #I need to put the labels in the same order as in the boxplot :
+     Tukey.labels$treatment=rownames(Tukey.labels)
+     order = order(Tukey.labels$treatment)
+     Tukey.labels=Tukey.labels[order(Tukey.labels$treatment) , ]
+     Tukey.labels$order = order
+     return(Tukey.labels)
+     }
+# A panel of colors to draw each group with the same color :
+my_colors <- c( 
+  rgb(143,199,74,maxColorValue = 255),
+  rgb(242,104,34,maxColorValue = 255), 
+  rgb(111,145,202,maxColorValue = 255)
+  # rgb(255,255,153,maxColorValue = 255)
+  )
+
+#-------------------------------------------------------------------------------------------------------------------
+#Clay
+
+Ghana_LPKS_Map_Distance_clay <- Ghana_LPKS_Map_Compare_cocoa %>% dplyr::select(id, Bottom.Depth, wise_cly_stdist, hwsd_cly_stdist, sg1_cly_stdist)#, sg2_cly_stdist)
+Ghana_LPKS_Map_Distance_clay$wise_cly_stdist <- 1-Ghana_LPKS_Map_Distance_clay$wise_cly_stdist
+Ghana_LPKS_Map_Distance_clay$hwsd_cly_stdist <- 1-Ghana_LPKS_Map_Distance_clay$hwsd_cly_stdist
+Ghana_LPKS_Map_Distance_clay$sg1_cly_stdist <- 1-Ghana_LPKS_Map_Distance_clay$sg1_cly_stdist
+#Ghana_LPKS_Map_Distance_clay$sg2_cly_stdist <- 1-Ghana_LPKS_Map_Distance_clay$sg2_cly_stdist
+
+Ghana_clay_dist <- gather(Ghana_LPKS_Map_Distance_clay,source,dist,wise_cly_stdist:sg1_cly_stdist) %>% arrange(id, Bottom.Depth)
+Ghana_clay_dist <- Ghana_clay_dist %>% mutate(Bottom.Depth = as.character(Ghana_clay_dist$Bottom.Depth))
+Ghana_clay_dist <- Ghana_clay_dist %>% mutate(source=ifelse(source=='wise_cly_stdist', 'wise', ifelse(source=='hwsd_cly_stdist', 'hwsd',  'sg1')))
+Ghana_clay_dist$source <- Ghana_clay_dist$source  %>% str_to_upper()
+Ghana_clay_dist$source <- as.factor(Ghana_clay_dist$source)
+Ghana_clay_dist %>% group_by(source) %>% summarize(mean(dist, na.rm=T), sd(dist, na.rm=T))
+
+clay_aov <- aov(Ghana_clay_dist$dist ~ Ghana_clay_dist$source)
+clay_posthoc <- TukeyHSD(x=clay_aov, 'Ghana_clay_dist$source', conf.level=0.95)
+
+plot(clay_posthoc , las=1 , col="brown")
+
+# Apply the function on my dataset
+LABELS <- generate_label_df(clay_posthoc, "Ghana_clay_dist$source")
+
+# Draw the basic boxplot
+pdf(here("results/figures/Ghana_LPKS_Map_Distance_clay_boxplot_cocoa.pdf"), width = 4.5, height = 4.5)
+a <- boxplot(Ghana_clay_dist$dist ~ Ghana_clay_dist$source , ylim=c(min(Ghana_clay_dist$dist, na.rm=T) , max(Ghana_clay_dist$dist, na.rm=T)+.1), col=my_colors[as.numeric(LABELS[,3])] , ylab="Disimilarity" , xlab="Soil Map" ,main="Clay LPKS Disimilarity")
+# I want to write the letter over each box. Over is how high I want to write it.
+over <- 0.1*max( a$stats[nrow(a$stats),] )
+#Add the labels
+text(c(1:nlevels(Ghana_clay_dist$source)), max(Ghana_clay_dist$dist, na.rm=T)+over, LABELS[,1], col=my_colors[as.numeric(LABELS[,3])], font=2)
+dev.off()
+
+#Sand
+Ghana_LPKS_Map_Distance_sand <- Ghana_LPKS_Map_Compare_cocoa %>% dplyr::select(id, Bottom.Depth, wise_snd_stdist, hwsd_snd_stdist, sg1_snd_stdist)
+Ghana_LPKS_Map_Distance_sand$wise_snd_stdist <- 1-Ghana_LPKS_Map_Distance_sand$wise_snd_stdist
+Ghana_LPKS_Map_Distance_sand$hwsd_snd_stdist <- 1-Ghana_LPKS_Map_Distance_sand$hwsd_snd_stdist
+Ghana_LPKS_Map_Distance_sand$sg1_snd_stdist <- 1-Ghana_LPKS_Map_Distance_sand$sg1_snd_stdist
+#Ghana_LPKS_Map_Distance_sand$sg2_snd_stdist <- 1-Ghana_LPKS_Map_Distance_sand$sg2_snd_stdist
+
+Ghana_sand_dist <- gather(Ghana_LPKS_Map_Distance_sand,source,dist,wise_snd_stdist:sg1_snd_stdist) %>% arrange(id, Bottom.Depth)
+Ghana_sand_dist <- Ghana_sand_dist %>% mutate(Bottom.Depth = as.character(Ghana_sand_dist$Bottom.Depth))
+Ghana_sand_dist <- Ghana_sand_dist %>% mutate(source=ifelse(source=='wise_snd_stdist', 'wise', ifelse(source=='hwsd_snd_stdist', 'hwsd',  'sg1')))
+Ghana_sand_dist$source <- Ghana_sand_dist$source  %>% str_to_upper()
+Ghana_sand_dist$source <- as.factor(Ghana_sand_dist$source)
+Ghana_sand_dist %>% group_by(source) %>% summarize(mean(dist, na.rm=T), sd(dist, na.rm=T))
+
+sand_aov <- aov(Ghana_sand_dist$dist ~ Ghana_sand_dist$source)
+sand_posthoc <- TukeyHSD(x=sand_aov, 'Ghana_sand_dist$source', conf.level=0.95)
+
+plot(sand_posthoc , las=1 , col="brown")
+
+# Apply the function on my dataset
+LABELS <- generate_label_df(sand_posthoc, "Ghana_sand_dist$source")
+
+# Draw the basic boxplot
+pdf(here("results/figures/Ghana_LPKS_Map_Distance_sand_boxplot_cocoa.pdf"), width = 4.5, height = 4.5)
+a <- boxplot(Ghana_sand_dist$dist ~ Ghana_sand_dist$source , ylim=c(min(Ghana_sand_dist$dist, na.rm=T) , 1.1), col=my_colors[as.numeric(LABELS[,3])] , ylab="Disimilarity" , xlab="Soil Map" ,main="Sand LPKS Disimilarity")
+# I want to write the letter over each box. Over is how high I want to write it.
+over <- 0.05*max( a$stats[nrow(a$stats),] )
+#Add the labels
+text(c(1:nlevels(Ghana_sand_dist$source)), max(Ghana_sand_dist$dist, na.rm=T)+over, LABELS[,1], col=my_colors[as.numeric(LABELS[,3])], font=2)
+dev.off()
+
+
+
+#Rock Fragments
+Ghana_LPKS_Map_Distance_rfv <- Ghana_LPKS_Map_Compare_cocoa %>% dplyr::select(id, Bottom.Depth, wise_rfv_stdist, hwsd_rfv_stdist, sg1_rfv_stdist)
+Ghana_LPKS_Map_Distance_rfv$wise_rfv_stdist <- 1-Ghana_LPKS_Map_Distance_rfv$wise_rfv_stdist
+Ghana_LPKS_Map_Distance_rfv$hwsd_rfv_stdist <- 1-Ghana_LPKS_Map_Distance_rfv$hwsd_rfv_stdist
+Ghana_LPKS_Map_Distance_rfv$sg1_rfv_stdist <- 1-Ghana_LPKS_Map_Distance_rfv$sg1_rfv_stdist
+# Ghana_LPKS_Map_Distance_rfv$sg2_rfv_stdist <- 1-Ghana_LPKS_Map_Distance_rfv$sg2_rfv_stdist
+
+Ghana_rfv_dist <- gather(Ghana_LPKS_Map_Distance_rfv,source,dist,wise_rfv_stdist:sg1_rfv_stdist) %>% arrange(id, Bottom.Depth)
+Ghana_rfv_dist <- Ghana_rfv_dist %>% mutate(Bottom.Depth = as.character(Ghana_rfv_dist$Bottom.Depth))
+Ghana_rfv_dist <- Ghana_rfv_dist %>% mutate(source=ifelse(source=='wise_rfv_stdist', 'wise', ifelse(source=='hwsd_rfv_stdist', 'hwsd',  'sg1')))
+Ghana_rfv_dist$source <- Ghana_rfv_dist$source  %>% str_to_upper()
+Ghana_rfv_dist$source <- as.factor(Ghana_rfv_dist$source)
+Ghana_rfv_dist %>% group_by(source) %>% summarize(mean(dist, na.rm=T), sd(dist, na.rm=T))
+
+rfv_aov <- aov(Ghana_rfv_dist$dist ~ Ghana_rfv_dist$source)
+rfv_posthoc <- TukeyHSD(x=rfv_aov, 'Ghana_rfv_dist$source', conf.level=0.95)
+
+plot(rfv_posthoc , las=1 , col="brown")
+
+# Apply the function on my dataset
+LABELS <- generate_label_df(rfv_posthoc, "Ghana_rfv_dist$source")
+
+# Draw the basic boxplot
+pdf(here("results/figures/Ghana_LPKS_Map_Distance_rfv_boxplot_cocoa.pdf"), width = 4.5, height = 4.5)
+a <- boxplot(Ghana_rfv_dist$dist ~ Ghana_rfv_dist$source , ylim=c(min(Ghana_rfv_dist$dist, na.rm=T) , 1.1), col=my_colors[as.numeric(LABELS[,3])] , ylab="Disimilarity" , xlab="Soil Map" ,main="Coarse Fragment LPKS Disimilarity")
+# I want to write the letter over each box. Over is how high I want to write it.
+over <- 0.05*max( a$stats[nrow(a$stats),] )
+#Add the labels
+text(c(1:nlevels(Ghana_rfv_dist$source)), max(Ghana_rfv_dist$dist, na.rm=T)+over, LABELS[,1], col=my_colors[as.numeric(LABELS[,3])], font=2)
+dev.off()
+
+#---------------------------------------------------------------------------------------------------------------------------
+
+#Frequency Tables
+txt_m <- Ghana_LPKS_Map_Compare_cocoa %>% dplyr::select(wise_txt_m,hwsd_txt_m,sg1_txt_m)
+gather(txt_m, "var", "value") %>%
+  count(var, value) %>%
+  group_by(var) %>%             # now required with changes to dplyr::count()
+  mutate(prop = prop.table(n))
+
+rfv_m <- Ghana_LPKS_Map_Compare_cocoa %>% dplyr::select(wise_rfv_m,hwsd_rfv_m,sg1_rfv_m)
+gather(rfv_m, "var", "value") %>%
+  count(var, value) %>%
+  group_by(var) %>%             # now required with changes to dplyr::count()
+  mutate(prop = prop.table(n))
+
+texture <- Ghana_LPKS_Map_Compare_cocoa %>% dplyr::select(texture, texture_wise, texture_hwsd, texture_sg1)
+texture_freq <- gather(texture, "var", "value") %>%
+  count(var, value) %>%
+  group_by(var) %>%             # now required with changes to dplyr::count()
+  mutate(prop = prop.table(n))
+
+rfv_class <- Ghana_LPKS_Map_Compare_cocoa %>% dplyr::select(rfv_class, rfv_class_wise, rfv_class_hwsd, rfv_class_sg1)
+rfv_class_freq <- gather(rfv_class, "var", "value") %>%
+  count(var, value) %>%
+  group_by(var) %>%             # now required with changes to dplyr::count()
+  mutate(prop = prop.table(n))
+
+#clay
+1-mean(Ghana_LPKS_Map_Compare_cocoa$wise_cly_stdist, na.rm=T)
+sd(Ghana_LPKS_Map_Compare_cocoa$wise_cly_stdist, na.rm=TRUE)/mean(Ghana_LPKS_Map_Compare_cocoa$wise_cly_stdist, na.rm=TRUE)*100
+
+1-mean(Ghana_LPKS_Map_Compare_cocoa$hwsd_cly_stdist, na.rm=T)
+sd(Ghana_LPKS_Map_Compare_cocoa$hwsd_cly_stdist, na.rm=TRUE)/mean(Ghana_LPKS_Map_Compare_cocoa$hwsd_cly_stdist, na.rm=TRUE)*100
+
+1-mean(Ghana_LPKS_Map_Compare_cocoa$sg1_cly_stdist, na.rm=T)
+sd(Ghana_LPKS_Map_Compare_cocoa$sg1_cly_stdist, na.rm=TRUE)/mean(Ghana_LPKS_Map_Compare_cocoa$sg1_cly_stdist, na.rm=TRUE)*100
+
+# 1-mean(Ghana_LPKS_Map_Compare_cocoa$sg2_cly_stdist, na.rm=T)
+sd(Ghana_LPKS_Map_Compare_cocoa$sg2_cly_stdist, na.rm=TRUE)/mean(Ghana_LPKS_Map_Compare_cocoa$sg2_cly_stdist, na.rm=TRUE)*100
+
+
+#sand
+1-mean(Ghana_LPKS_Map_Compare_cocoa$wise_snd_stdist, na.rm=T)
+sd(Ghana_LPKS_Map_Compare_cocoa$wise_snd_stdist, na.rm=TRUE)/mean(Ghana_LPKS_Map_Compare_cocoa$wise_snd_stdist, na.rm=TRUE)*100
+
+1-mean(Ghana_LPKS_Map_Compare_cocoa$hwsd_snd_stdist, na.rm=T)
+sd(Ghana_LPKS_Map_Compare_cocoa$hwsd_snd_stdist, na.rm=TRUE)/mean(Ghana_LPKS_Map_Compare_cocoa$hwsd_snd_stdist, na.rm=TRUE)*100
+
+1-mean(Ghana_LPKS_Map_Compare_cocoa$sg1_snd_stdist, na.rm=T)
+sd(Ghana_LPKS_Map_Compare_cocoa$sg1_snd_stdist, na.rm=TRUE)/mean(Ghana_LPKS_Map_Compare_cocoa$sg1_snd_stdist, na.rm=TRUE)*100
+
+# 1-mean(Ghana_LPKS_Map_Compare_cocoa$sg2_snd_stdist, na.rm=T)
+# sd(Ghana_LPKS_Map_Compare_cocoa$sg2_snd_stdist, na.rm=TRUE)/mean(Ghana_LPKS_Map_Compare_cocoa$sg2_snd_stdist, na.rm=TRUE)*100
+
+
+#rfv
+1-mean(Ghana_LPKS_Map_Compare_cocoa$wise_rfv_stdist, na.rm=T)
+sd(Ghana_LPKS_Map_Compare_cocoa$wise_rfv_stdist, na.rm=TRUE)/mean(Ghana_LPKS_Map_Compare_cocoa$wise_rfv_stdist, na.rm=TRUE)*100
+
+1-mean(Ghana_LPKS_Map_Compare_cocoa$hwsd_rfv_stdist, na.rm=T)
+sd(Ghana_LPKS_Map_Compare_cocoa$hwsd_rfv_stdist, na.rm=TRUE)/mean(Ghana_LPKS_Map_Compare_cocoa$hwsd_rfv_stdist, na.rm=TRUE)*100
+
+1-mean(Ghana_LPKS_Map_Compare_cocoa$sg1_rfv_stdist, na.rm=T)
+sd(Ghana_LPKS_Map_Compare_cocoa$sg1_rfv_stdist, na.rm=TRUE)/mean(Ghana_LPKS_Map_Compare_cocoa$sg1_rfv_stdist, na.rm=TRUE)*100
+
+# 1-mean(Ghana_LPKS_Map_Compare_cocoa$sg2_rfv_stdist, na.rm=T)
+# sd(Ghana_LPKS_Map_Compare_cocoa$sg2_rfv_stdist, na.rm=TRUE)/mean(Ghana_LPKS_Map_Compare_cocoa$sg2_rfv_stdist, na.rm=TRUE)*100
+
+
+#Exact match
+sum(Ghana_LPKS_Map_Compare_cocoa$wise_txt_m)
+sum(Ghana_LPKS_Map_Compare_cocoa$hwsd_txt_m)
+sum(Ghana_LPKS_Map_Compare_cocoa$sg1_txt_m)
+# sum(Ghana_LPKS_Map_Compare_cocoa$sg2_txt_m)
+
+sum(Ghana_LPKS_Map_Compare_cocoa$wise_rfv_m)
+sum(Ghana_LPKS_Map_Compare_cocoa$hwsd_rfv_m)
+sum(Ghana_LPKS_Map_Compare_cocoa$sg1_rfv_m)
+# sum(Ghana_LPKS_Map_Compare_cocoa$sg2_rfv_m)
+
+library(ggridges)
+library(ggpubr)
+
+Ghana_LPKS_Map_Distance_sand2 <- Ghana_LPKS_Map_Distance_sand %>% tidyr::gather(id, value=dist, wise_snd_stdist:sg1_snd_stdist) 
+Ghana_LPKS_Map_Distance_sand2 <- Ghana_LPKS_Map_Distance_sand2 %>% filter(!is.na(dist))
+p <- ggdensity(Ghana_LPKS_Map_Distance_sand2, x = "dist",
+   add = "median", rug = TRUE,
+   color = "id", fill = "id",
+   palette = c("#00AFBB", "#E7B800", "#FC4E07"))
+ggsave(here("results/figures/Ghana_LPKS_Map_Distance_sand_hist_cocoa.pdf"), width = 5.5, height = 3.5)
+
+Ghana_LPKS_Map_Distance_clay2 <- Ghana_LPKS_Map_Distance_clay %>% tidyr::gather(id, value=dist, wise_cly_stdist:sg1_cly_stdist) 
+Ghana_LPKS_Map_Distance_clay2 <- Ghana_LPKS_Map_Distance_clay2 %>% filter(!is.na(dist))
+p <- ggdensity(Ghana_LPKS_Map_Distance_clay2, x = "dist",
+   add = "median", rug = TRUE,
+   color = "id", fill = "id",
+   palette = c("#00AFBB", "#E7B800", "#FC4E07"))
+ggsave(here("results/figures/Ghana_LPKS_Map_Distance_clay_hist_cocoa.pdf"), width = 5.5, height = 3.5)
+
+Ghana_LPKS_Map_Distance_rfv2 <- Ghana_LPKS_Map_Distance_rfv %>% tidyr::gather(id, value=dist, wise_rfv_stdist:sg1_rfv_stdist) 
+Ghana_LPKS_Map_Distance_rfv2 <- Ghana_LPKS_Map_Distance_rfv2 %>% filter(!is.na(dist))
+p <- ggdensity(Ghana_LPKS_Map_Distance_rfv2, x = "dist",
+   add = "median", rug = TRUE,
+   color = "id", fill = "id",
+   palette = c("#00AFBB", "#E7B800", "#FC4E07"))
+ggsave(here("results/figures/Ghana_LPKS_Map_Distance_rfv_hist_cocoa.pdf"), width = 5.5, height = 3.5)
+
+# theme_set(theme_ridges())
+# ggplot(Ghana_LPKS_Map_Distance_sand2, aes(x = dist, y = id)) +
+#   geom_density_ridges(aes(fill = id)) +
+#   scale_fill_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))
+```
+
+
+```{r}
+Ghana_LPKS_Map_Distance_clay_rank <- Ghana_LPKS_Map_Distance_clay %>% filter(!is.na(wise_cly_stdist))
+Ghana_LPKS_Map_Distance_clay_rank <- Ghana_LPKS_Map_Distance_clay_rank  %>% rowwise() %>%
+  mutate(wise_top=if_else(wise_cly_stdist==min(wise_cly_stdist, hwsd_cly_stdist, sg1_cly_stdist), 1,0))   %>% 
+  mutate(hwsd_top=if_else(hwsd_cly_stdist==min(wise_cly_stdist, hwsd_cly_stdist, sg1_cly_stdist), 1,0))   %>% 
+  mutate(sg1_top=if_else(sg1_cly_stdist==min(wise_cly_stdist, hwsd_cly_stdist, sg1_cly_stdist), 1,0)) %>% dplyr::select(wise_top, hwsd_top, sg1_top) %>% ungroup()
+
+sum(Ghana_LPKS_Map_Distance_clay_rank$wise_top)
+# 479
+sum(Ghana_LPKS_Map_Distance_clay_rank$hwsd_top)
+# 895
+sum(Ghana_LPKS_Map_Distance_clay_rank$sg1_top)
+# 602
+
+sum(Ghana_LPKS_Map_Distance_clay_rank$wise_top)/1250 #0.3832
+sum(Ghana_LPKS_Map_Distance_clay_rank$hwsd_top)/1250 #0.716
+sum(Ghana_LPKS_Map_Distance_clay_rank$sg1_top)/1250 #0.4816
+
+Ghana_LPKS_Map_Distance_sand_rank <- Ghana_LPKS_Map_Distance_sand %>% filter(!is.na(wise_snd_stdist))
+Ghana_LPKS_Map_Distance_sand_rank <- Ghana_LPKS_Map_Distance_sand_rank  %>% rowwise() %>%
+  mutate(wise_top=if_else(wise_snd_stdist==min(wise_snd_stdist, hwsd_snd_stdist, sg1_snd_stdist), 1,0))   %>% 
+  mutate(hwsd_top=if_else(hwsd_snd_stdist==min(wise_snd_stdist, hwsd_snd_stdist, sg1_snd_stdist), 1,0))   %>% 
+  mutate(sg1_top=if_else(sg1_snd_stdist==min(wise_snd_stdist, hwsd_snd_stdist, sg1_snd_stdist), 1,0)) %>% dplyr::select(wise_top, hwsd_top, sg1_top) %>% ungroup()
+
+sum(Ghana_LPKS_Map_Distance_sand_rank$wise_top)
+# 475
+sum(Ghana_LPKS_Map_Distance_sand_rank$hwsd_top)
+# 1673
+sum(Ghana_LPKS_Map_Distance_sand_rank$sg1_top)
+# 550
+
+sum(Ghana_LPKS_Map_Distance_sand_rank$wise_top)/1250 #0.38
+sum(Ghana_LPKS_Map_Distance_sand_rank$hwsd_top)/1250 #054
+sum(Ghana_LPKS_Map_Distance_sand_rank$sg1_top)/1250   #0.44 
+
+
+Ghana_LPKS_Map_Distance_rfv_rank <- Ghana_LPKS_Map_Distance_rfv %>% filter(!is.na(wise_rfv_stdist))
+Ghana_LPKS_Map_Distance_rfv_rank <- Ghana_LPKS_Map_Distance_rfv_rank  %>% rowwise() %>%
+  mutate(wise_top=if_else(wise_rfv_stdist==min(wise_rfv_stdist, hwsd_rfv_stdist, sg1_rfv_stdist), 1,0))   %>% 
+  mutate(hwsd_top=if_else(hwsd_rfv_stdist==min(wise_rfv_stdist, hwsd_rfv_stdist, sg1_rfv_stdist), 1,0))   %>% 
+  mutate(sg1_top=if_else(sg1_rfv_stdist==min(wise_rfv_stdist, hwsd_rfv_stdist, sg1_rfv_stdist), 1,0)) %>% dplyr::select(wise_top, hwsd_top, sg1_top) %>% ungroup()
+
+sum(Ghana_LPKS_Map_Distance_rfv_rank$wise_top)
+# 929
+sum(Ghana_LPKS_Map_Distance_rfv_rank$hwsd_top)
+#929
+sum(Ghana_LPKS_Map_Distance_rfv_rank$sg1_top)
+# 815
+
+sum(Ghana_LPKS_Map_Distance_rfv_rank$wise_top)/1250 # 0.74 WISE
+sum(Ghana_LPKS_Map_Distance_rfv_rank$hwsd_top)/1250 # 0.74 HWSD
+sum(Ghana_LPKS_Map_Distance_rfv_rank$sg1_top)/1250   # 0.65 SG
+
+```
+
+

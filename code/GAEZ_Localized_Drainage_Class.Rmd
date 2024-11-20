@@ -1,0 +1,162 @@
+---
+title: "GAEZ Localized Drainage Class"
+output: html_notebook
+---
+
+```{r message=FALSE, warning=FALSE}
+#set libary path
+required.packages <- c("sf", "readr", "dplyr", "tidyr", "purrr", "reticulate", "Rcpp", "stringr", "utils", "httr", "jsonlite", "here", "raster", "aqp", "GSIF","XML", "rgdal","gdalUtils", "viridis", "rasterVis")
+new.packages <- required.packages[!(required.packages %in% installed.packages()[, 
+    "Package"])]
+if (length(new.packages)) install.packages(new.packages)
+lapply(required.packages, require, character.only = T)
+rm(required.packages, new.packages)
+
+```
+
+
+# Site-based soil drainage class
+1. Calculate all soil types mapped in Ghana based on WISE
+2. Subset GAEZ Soil Drainage Characteristics table
+3. Evaluate variation in classification based on soil type and phases, e.g., vertic, gelic, and root limiting layers.
+4. Create generalized lookup table based on phase criteria we can gather from LandPKS soil limitations, texture, slope
+```{r}
+ssa_countries <- read_sf('C:/R_Drive/Data_Files/LPKS_Data/R_Projects/LPKS.Ghana/data/raw_data/Countries.shp')
+ghana <- ssa_countries %>% dplyr::filter(COUNTRY=='Ghana')
+#WISE30sec
+wise_spatial <- read_sf("C:/LandPKS_API_SoilID-master/global/wise30sec_poly_simp_soil.shp")
+wise_spatial <- st_make_valid(wise_spatial)
+wise_ghana <- intersect(as_Spatial(wise_spatial), as_Spatial(ghana))
+wise <- read.csv("C:/LandPKS_API_SoilID-master/global/wise_full_soil.csv")
+wise_gh_data <- wise %>% dplyr::filter(MU_GLOBAL %in% wise_ghana$MU_GLOBAL)
+
+#list of unique taxonomy in Ghana
+gh_tax <- unique(wise_gh_data$CLAF)
+# Import existing GAEZ Soil Drainage Characteristics table
+GAEZ_Soil_Drainage <- read.csv('C:/R_Drive/Data_Files/LPKS_Data/Projects/Ghana/Data/GAEZ/soil_drainage_requirements_FAO_90.csv')
+
+gh_drainage_req <- GAEZ_Soil_Drainage %>% dplyr::filter(FAO90_CODE %in% gh_tax)
+
+gh_drainage_req_long <- gh_drainage_req %>% pivot_longer(!c(FAO90_CODE, T_TEXTURE), names_to = "require", values_to = "class")
+gh_drainage_req_long <- gh_drainage_req_long %>% dplyr::mutate(Phase = case_when(grepl("NP", require) ~ "PH0",
+                            grepl("PH1", require) ~"PH1",
+                            grepl("PH2", require) ~"PH2"))
+gh_drainage_req_long <- gh_drainage_req_long %>% dplyr::mutate(Slope = case_when(
+                            grepl("0.0p5", require) ~ "0_p5",
+                            grepl("0p5.2", require) ~ "p5_2",
+                            grepl("2.5", require) ~ "2_5",
+                            grepl("S5.10", require) ~ "5_10",
+                            grepl("10.15", require) ~ "10_15",
+                            grepl("15.30", require) ~ "15_30",
+                            grepl("30.45", require) ~ "30_45",
+                            grepl("S45_100", require) ~"45_100"))
+
+gh_drainage_req_long <- gh_drainage_req_long %>% dplyr::mutate(saturation = case_when(
+                            grepl("g", FAO90_CODE, ignore.case = FALSE) ~ "saturation",
+                            grepl("j", FAO90_CODE, ignore.case = FALSE) ~ "saturation",
+                            grepl("PL", FAO90_CODE, ignore.case = FALSE) ~ "saturation",
+                            grepl("GL", FAO90_CODE, ignore.case = FALSE) ~ "saturation",
+                            grepl("PT", FAO90_CODE, ignore.case = FALSE) ~ "saturation",
+                            grepl("p", FAO90_CODE, ignore.case = FALSE) ~ "saturation",
+                            grepl("PH2", Phase, ignore.case = FALSE) ~ "saturation"))
+
+gh_drainage_req_long <- gh_drainage_req_long %>% dplyr::mutate(shallow = case_when(
+                            grepl("LP", FAO90_CODE, ignore.case = FALSE) ~ "shallow"))
+
+gh_drainage_req_long <- gh_drainage_req_long %>% dplyr::mutate(hardpan = case_when(
+                            grepl("PT", FAO90_CODE, ignore.case = FALSE) ~ "hardpan",
+                            grepl("p", FAO90_CODE, ignore.case = FALSE) ~ "hardpan",
+                            grepl("PH1", Phase, ignore.case = FALSE) ~ "hardpan"))
+gh_drainage_req_long <- gh_drainage_req_long %>% dplyr::mutate(vertic = case_when(                            
+                            grepl("VR", FAO90_CODE, ignore.case = FALSE) ~ "vertic"))
+gh_drainage_req_long <- gh_drainage_req_long %>% dplyr::mutate(histic = case_when(
+                            grepl("HS", FAO90_CODE, ignore.case = FALSE) ~ "histosol"))
+                            
+
+
+View(gh_drainage_req_long %>% dplyr::filter(T_TEXTURE==1 & Slope=="0_p5")) #Restr_Grp=='G2' & 
+#phases: PH1=Petroferric/Duripan/ Placic/Lithic phases; PH2=Anthraquic phase
+#1. Shallow = c('LP', )
+#2a. Saturation = c('g', 'j','PL', 'GL')
+#2b. Root restriction = c('PT', 'p')
+#2c. Vertic = c('VR')
+#3. Histosols = 'HS'
+
+```
+
+# Manual Review of restriction ratings
+Approach:
+1. Set texture class,  
+2. set slope class, and 
+3. evaluate restrictions for each texture/slope combination
+
+
+```{r}
+#All restriction combinations for texture=1 and slope 0-0.5
+# View histic
+View(gh_drainage_req_long %>% dplyr::filter(T_TEXTURE==1 & Slope=="0_p5" & !is.na(histic)))
+# View vertic
+View(gh_drainage_req_long %>% dplyr::filter(T_TEXTURE==1 & Slope=="0_p5" & !is.na(vertic)))
+# View saturation
+View(gh_drainage_req_long %>% dplyr::filter(T_TEXTURE==1 & Slope=="0_p5" & !is.na(saturation) & is.na(vertic) & is.na(histic)))
+# View hardpan restriction
+View(gh_drainage_req_long %>% dplyr::filter(T_TEXTURE==1 & Slope=="0_p5" & !is.na(hardpan) & is.na(saturation)& is.na(shallow) & is.na(vertic)& is.na(histic)))
+# View shallow
+View(gh_drainage_req_long %>% dplyr::filter(T_TEXTURE==1 & Slope=="0_p5" & !is.na(shallow)))
+# View no restrictions
+View(gh_drainage_req_long %>% dplyr::filter(T_TEXTURE==1 & Slope=="0_p5" & is.na(hardpan) & is.na(saturation)& is.na(shallow) & is.na(vertic)& is.na(histic)))
+
+
+# Based on manual filtering of the data, I created a generalized table of rating criteria for deriving drainage class. In the future
+# this could be automated by sumarizing the count of each drainage class within each criteria and taking the max class. Gleysols and Fluvosols 
+# are outlier soils based on the current rating criteria. Need to put some more thought into how to deal with these. 
+# Changed 'Texture' column name to 'PSCL_ID'
+# Load in generalized rating criteria table for generating site-based soil drainage classes.
+drainage_class_reqs <- read.csv('C:/R_Drive/Data_Files/LPKS_Data/Projects/Ghana/Data/GAEZ/soil_drainage_class_requirements_RF_low.csv')
+```
+
+
+# Function to calculate drainage class
+
+Need to filter based on these restrictions:
+1. Histic = currently no LPKS input, default to (Histic = 'No')
+2. Saturation = flooding (flooding = 'Frequent')
+3. Vertic = cracks (cracks = 'Yes') & texture group = F
+4. Hardpan = is_compaction_layer (is_compaction_layer = 'Yes')
+5. Shallow = bedrock_depth (bedrock_depth <=50)
+6. No restriction
+
+LPKS inputs: texture, slope, flooding, cracks, is_compaction_layer, bedrock_depth
+```{r}
+drainage_class_calc <-  function(drainage_class_reqs, texture, slope, flooding, cracks, PSCL, is_compaction_layer, bedrock_depth){
+  histic=='No'
+  if(flooding == 'Frequent'){
+    Saturation == 'Yes' 
+  } else {
+    Saturation == 'No' 
+  }
+  if(PSCL=='F' & cracks == 'Yes'){
+    Vertic=='Yes'
+  } else {
+    Vertic=='No'
+  }
+  if(is_compaction_layer == 'Yes'){
+    Hardpan =='Yes'
+  } else {
+    Hardpan == 'No'
+  }
+  if(bedrock_depth <=50){
+    Shallow == 'Yes'
+  } else {
+    Shallow == 'No'
+  }
+  
+}
+
+
+  
+  
+  
+  
+  
+```
