@@ -261,12 +261,20 @@ End-to-end workflow demonstration.
 CROP_ID='4' (Maize), Input Level='L' (Low)
 SQ1: 20.04 (nutrient availability - severe constraint)
 SQ2: 94.55 (nutrient retention - slight constraint)
-SQ3: NaN (rooting conditions - missing data)
+SQ3: 97.82 (rooting conditions - no constraint)
 SQ4: 100.0 (oxygen availability - no constraint)
 SQ5: 100.0 (salinity - no constraint)
 SQ6: 100.0 (gypsum/lime - no constraint)
-SQ7: NaN (workability - missing data)
+SQ7: 98.45 (workability - no constraint)
+SR: 19.17 (final soil rating - N: Not suitable for low-input maize)
 ```
+
+**Note**: SQ3 and SQ7 previously returned `NaN` due to missing `rd` (restrictive depth) and `fragvol` (coarse fragments) data. The fix implemented in `GAEZ_SQI_functions.py:774-780` now imputes defaults (rd=200cm, fragvol=0%) for missing values, treating absence of restrictions as optimal conditions.
+
+**Interpretation**:
+- The low SR (19.17) is driven by **SQ1 (20.04)** - severe nutrient deficiency
+- Physical conditions are excellent (SQ3, SQ4, SQ7 near 100)
+- This sandy loam soil would benefit from fertilizer inputs (switch to Intermediate/High input level)
 
 ---
 
@@ -355,6 +363,40 @@ print(gaez_scores)
 
 ---
 
+## Troubleshooting
+
+### SQ3 and SQ7 Return NaN
+
+**Problem**: In earlier versions, SQ3 (Rooting Conditions) and SQ7 (Workability) would return `NaN` for soils with missing data.
+
+**Cause**: SSURGO leaves `rd` (restrictive depth) and `fragvol` (coarse fragments) as `NaN` when no restrictions or fragments exist.
+
+**Solution**: ✅ Fixed in `GAEZ_SQI_functions.py:774-780`
+
+The system now automatically imputes default values:
+- `rd = 200 cm` when missing (assumes deep, unrestricted soil)
+- `fragvol = 0%` when missing (assumes no coarse fragments)
+
+For detailed explanation, see `NaN_Issues_Explanation.md`.
+
+### Missing Crop Requirement Data
+
+Ensure CSV file paths in `gaez_config.py` point to valid GAEZ requirement tables:
+- `GAEZ_profile_req_rf.csv`
+- `GAEZ_phase_req_rf.csv`
+- `GAEZ_drainage_req_rf.csv`
+- `GAEZ_text_req_rf.csv`
+- `GAEZ_terrain_req_rf.csv`
+
+---
+
 ## Notes
 
 This system provides a comprehensive framework for evaluating agricultural land suitability using standardized GAEZ methodology with high-resolution US soil data.
+
+### Key Features
+- Automated SSURGO data retrieval via WCS/SDA API
+- Comprehensive soil phase classification (22 phase types)
+- Seven soil quality indices (SQI1-SQI7) for holistic assessment
+- Handles missing data gracefully with scientifically-sound defaults
+- Supports user field/lab data integration to override map-based estimates
