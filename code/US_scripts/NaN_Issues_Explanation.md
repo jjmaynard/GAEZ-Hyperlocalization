@@ -1,8 +1,16 @@
 # Why SQ3 and SQ7 Return NaN - Explanation
 
+## Status: ✅ FIXED
+
+**Fix implemented in**: `GAEZ_SQI_functions.py:774-780`
+
+The issue has been resolved by adding default value imputation in the `gaez_sqi_ratings()` function.
+
+---
+
 ## Problem Summary
 
-In the Jupyter notebook example (`SSURGO_GAEZ_Calc.ipynb`), **SQ3** (Rooting Conditions) and **SQ7** (Workability) return `NaN` instead of numeric scores. This occurs due to **missing data** in critical SSURGO fields.
+In the Jupyter notebook example (`SSURGO_GAEZ_Calc.ipynb`), **SQ3** (Rooting Conditions) and **SQ7** (Workability) returned `NaN` instead of numeric scores. This occurred due to **missing data** in critical SSURGO fields.
 
 ---
 
@@ -203,12 +211,14 @@ if pd.isna(cf):
 
 ---
 
-## Recommended Fix
+## Implemented Fix ✅
 
-**Add this preprocessing step before calculating SQIs:**
+**Location**: `GAEZ_SQI_functions.py:774-780`
+
+The following preprocessing step has been added before calculating SQIs:
 
 ```python
-# In GAEZ_SQI_functions.py, at the start of gaez_sqi_ratings():
+# In GAEZ_SQI_functions.py, in gaez_sqi_ratings():
 
 def gaez_sqi_ratings(map_data, CROP_ID, inputLevel, depthWt_type=1,
                      plot_data=None, site_data=None, lab_data=None):
@@ -219,9 +229,11 @@ def gaez_sqi_ratings(map_data, CROP_ID, inputLevel, depthWt_type=1,
     map_data = GAEZ_soil_data_processing.process_site_data(site_data, map_data)
     map_data = GAEZ_soil_data_processing.process_lab_data(lab_data, map_data)
 
-    # FIX: Handle missing values with sensible defaults
-    map_data['rd'] = map_data['rd'].fillna(200)      # No restriction
-    map_data['fragvol'] = map_data['fragvol'].fillna(0)  # No fragments
+    # IMPLEMENTED FIX: Handle missing values with sensible defaults
+    if 'rd' in map_data.columns:
+        map_data['rd'] = map_data['rd'].fillna(200)      # No restriction
+    if 'fragvol' in map_data.columns:
+        map_data['fragvol'] = map_data['fragvol'].fillna(0)  # No fragments
 
     # ... rest of function
 ```
@@ -231,6 +243,7 @@ This ensures:
 - Missing `fragvol` → treated as **no coarse fragments** (0%)
 - SQ3 and SQ7 calculate properly
 - No loss of soil suitability information
+- Safe handling when columns don't exist
 
 ---
 

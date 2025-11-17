@@ -771,6 +771,14 @@ def gaez_sqi_ratings(map_data, CROP_ID, inputLevel, depthWt_type=1, plot_data=No
     map_data = GAEZ_soil_data_processing.process_site_data(site_data, map_data)
     map_data = GAEZ_soil_data_processing.process_lab_data(lab_data, map_data)
 
+    # Handle missing values with sensible defaults to prevent NaN propagation in SQ3 and SQ7
+    # rd (restrictive depth): NaN indicates no restriction → default to 200 cm (deep soil)
+    # fragvol (coarse fragments): NaN indicates negligible fragments → default to 0%
+    if 'rd' in map_data.columns:
+        map_data['rd'] = map_data['rd'].fillna(200)
+    if 'fragvol' in map_data.columns:
+        map_data['fragvol'] = map_data['fragvol'].fillna(0)
+
     # Load crop requirement tables (based on input level and crop ID)
     crop_reqs = GAEZ_crop_req.getGAEZ_requirements_source(CROP_ID=CROP_ID, inputLevel=inputLevel, source='csv', requirement_type='all')
     profile_req = crop_reqs.get("profile")
