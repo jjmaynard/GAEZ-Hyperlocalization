@@ -1,0 +1,25 @@
+# Testing dependencies for GAEZ US Scripts
+
+# Core dependencies (should match production requirements)
+numpy>=1.21.0
+pandas>=1.3.0
+scipy>=1.7.0
+geopandas>=0.10.0
+shapely>=1.8.0
+rasterio>=1.2.0
+pyproj>=3.2.0
+requests>=2.26.0
+
+# Testing frameworks
+pytest>=7.0.0
+pytest-cov>=3.0.0
+pytest-mock>=3.6.0
+
+# Code quality
+black>=22.0.0
+flake8>=4.0.0
+mypy>=0.950
+
+# For mocking external APIs
+responses>=0.20.0
+requests-mock>=1.9.0
