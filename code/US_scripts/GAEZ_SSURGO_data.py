@@ -272,12 +272,17 @@ def classify_pscl(texture_or_row, clay=None, sand=None):
     1. classify_pscl(texture_name) - from texture string
     2. classify_pscl(row) - extract from row with 'texture', 'clay', 'sand' columns
     """
+    # Initialize has_values flag
+    has_values = False
+
     # Handle row-based call
     if isinstance(texture_or_row, (dict, pd.Series)):
         row = texture_or_row
         clay = row.get('clay', 0) if pd.notnull(row.get('clay')) else 0
         sand = row.get('sand', 0) if pd.notnull(row.get('sand')) else 0
         texture = row['texture'].lower().strip() if pd.notnull(row.get('texture')) else ''
+        # Row-based calls always have values
+        has_values = True
     # Handle texture string call
     elif isinstance(texture_or_row, str):
         texture = texture_or_row.lower().strip()

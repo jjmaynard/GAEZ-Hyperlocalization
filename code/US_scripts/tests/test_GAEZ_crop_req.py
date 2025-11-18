@@ -445,3 +445,318 @@ class TestDataFrameColumns:
         expected_cols = {'CROP_ID', 'input_level', 'SQI_code', 'score',
                         'text_class_id', 'text_class'}
         pass
+
+
+@pytest.mark.skip(reason="getDataStore_Connection not available - database tests require database module")
+class TestGetGAEZRequirementsDatabase:
+    """Tests for getGAEZ_requirements database version with mocking."""
+
+    @patch('builtins.getDataStore_Connection')
+    def test_database_profile_requirements(self, mock_connection):
+        """Test retrieving profile requirements from database"""
+        # Create mock cursor and connection
+        mock_cursor = MagicMock()
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connection.return_value = mock_conn
+
+        # Mock database response
+        mock_cursor.fetchall.return_value = [
+            ('4', 'Maize', '1', 1, 80, 1.0, 'oc', '%', 1, 'Organic carbon'),
+            ('4', 'Maize', '3', 1, 90, 2.0, 'oc', '%', 1, 'Organic carbon')
+        ]
+
+        result = GAEZ_crop_req.getGAEZ_requirements(
+            CROP_ID='4',
+            inputLevel='L',
+            requirement_type='profile'
+        )
+
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == 2
+        assert mock_cursor.execute.called
+        assert mock_conn.close.called
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_texture_requirements(self, mock_connection):
+        """Test retrieving texture requirements from database"""
+        mock_cursor = MagicMock()
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connection.return_value = mock_conn
+
+        mock_cursor.fetchall.return_value = [
+            ('4', 'Maize', '1', 1, 90, '7', 'Loam'),
+            ('4', 'Maize', '3', 1, 95, '7', 'Loam')
+        ]
+
+        result = GAEZ_crop_req.getGAEZ_requirements(
+            CROP_ID='4',
+            inputLevel='L',
+            requirement_type='texture'
+        )
+
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == 2
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_terrain_requirements(self, mock_connection):
+        """Test retrieving terrain requirements from database"""
+        mock_cursor = MagicMock()
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connection.return_value = mock_conn
+
+        mock_cursor.fetchall.return_value = [
+            ('4', 'Maize', 'Cereals', '1', 'Rain-fed', 'Level', 1, 100, 'Suitable')
+        ]
+
+        result = GAEZ_crop_req.getGAEZ_requirements(
+            CROP_ID='4',
+            inputLevel='L',
+            requirement_type='terrain'
+        )
+
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == 1
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_phase_requirements(self, mock_connection):
+        """Test retrieving phase requirements from database"""
+        mock_cursor = MagicMock()
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connection.return_value = mock_conn
+
+        mock_cursor.fetchall.return_value = [
+            ('4', 'Maize', '1', 3, 'phase', 0, 'None', 100)
+        ]
+
+        result = GAEZ_crop_req.getGAEZ_requirements(
+            CROP_ID='4',
+            inputLevel='L',
+            requirement_type='phase'
+        )
+
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == 1
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_drainage_requirements(self, mock_connection):
+        """Test retrieving drainage requirements from database"""
+        mock_cursor = MagicMock()
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connection.return_value = mock_conn
+
+        mock_cursor.fetchall.return_value = [
+            ('4', 'Maize', '1', 4, '2', 3, 'Well drained', 95)
+        ]
+
+        result = GAEZ_crop_req.getGAEZ_requirements(
+            CROP_ID='4',
+            inputLevel='L',
+            requirement_type='drainage'
+        )
+
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == 1
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_invalid_requirement_type(self, mock_connection):
+        """Test error handling for invalid requirement type"""
+        result = GAEZ_crop_req.getGAEZ_requirements(
+            CROP_ID='4',
+            inputLevel='L',
+            requirement_type='invalid_type'
+        )
+
+        assert result is None
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_invalid_input_level(self, mock_connection):
+        """Test error handling for invalid input level"""
+        result = GAEZ_crop_req.getGAEZ_requirements(
+            CROP_ID='4',
+            inputLevel='X',
+            requirement_type='profile'
+        )
+
+        assert result == 'Please enter `inputLevel`'
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_connection_error(self, mock_connection):
+        """Test handling of database connection errors"""
+        mock_connection.side_effect = Exception("Database connection failed")
+
+        result = GAEZ_crop_req.getGAEZ_requirements(
+            CROP_ID='4',
+            inputLevel='L',
+            requirement_type='profile'
+        )
+
+        assert result is None
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_input_level_low(self, mock_connection):
+        """Test that Low input level queries with correct values"""
+        mock_cursor = MagicMock()
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connection.return_value = mock_conn
+
+        mock_cursor.fetchall.return_value = []
+
+        GAEZ_crop_req.getGAEZ_requirements(
+            CROP_ID='4',
+            inputLevel='L',
+            requirement_type='profile'
+        )
+
+        # Verify SQL was called with correct input levels (1, 3, 4)
+        assert mock_cursor.execute.called
+        call_args = mock_cursor.execute.call_args[0]
+        assert '4' in call_args[1]  # CROP_ID
+        assert '1' in call_args[1]  # Input level 1
+        assert '3' in call_args[1]  # Input level 3
+        assert '4' in call_args[1]  # Input level 4
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_input_level_intermediate(self, mock_connection):
+        """Test that Intermediate input level queries with correct values"""
+        mock_cursor = MagicMock()
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connection.return_value = mock_conn
+
+        mock_cursor.fetchall.return_value = []
+
+        GAEZ_crop_req.getGAEZ_requirements(
+            CROP_ID='4',
+            inputLevel='I',
+            requirement_type='profile'
+        )
+
+        # Verify SQL was called with correct input levels (2, 3, 4)
+        assert mock_cursor.execute.called
+        call_args = mock_cursor.execute.call_args[0]
+        assert '4' in call_args[1]  # CROP_ID
+        assert '2' in call_args[1]  # Input level 2
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_input_level_high(self, mock_connection):
+        """Test that High input level queries with correct values"""
+        mock_cursor = MagicMock()
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connection.return_value = mock_conn
+
+        mock_cursor.fetchall.return_value = []
+
+        GAEZ_crop_req.getGAEZ_requirements(
+            CROP_ID='4',
+            inputLevel='H',
+            requirement_type='profile'
+        )
+
+        # Verify SQL was called with correct input levels (4, 5)
+        assert mock_cursor.execute.called
+        call_args = mock_cursor.execute.call_args[0]
+        assert '4' in call_args[1]  # CROP_ID
+        assert '5' in call_args[1]  # Input level 5
+
+
+@pytest.mark.skip(reason="getDataStore_Connection not available - database tests require database module")
+class TestGetGAEZRequirementsSourceDatabase:
+    """Tests for getGAEZ_requirements_source database mode with mocking."""
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_source_single_type(self, mock_connection):
+        """Test retrieving single requirement type from database"""
+        mock_cursor = MagicMock()
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connection.return_value = mock_conn
+
+        mock_cursor.fetchall.return_value = [
+            ('4', 'Maize', '1', 1, 80, 1.0, 'oc', '%', 1, 'Organic carbon')
+        ]
+
+        result = GAEZ_crop_req.getGAEZ_requirements_source(
+            CROP_ID='4',
+            inputLevel='L',
+            source='database',
+            requirement_type='profile'
+        )
+
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == 1
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_source_all_types(self, mock_connection):
+        """Test retrieving all requirement types from database"""
+        mock_cursor = MagicMock()
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connection.return_value = mock_conn
+
+        # Return different data for each query
+        mock_cursor.fetchall.side_effect = [
+            [('4', 'Maize', '1', 1, 80, 1.0, 'oc', '%', 1, 'Organic carbon')],  # profile
+            [('4', 'Maize', '1', 1, 90, '7', 'Loam')],  # texture
+            [('4', 'Maize', 'Cereals', '1', 'Rain-fed', 'Level', 1, 100, 'Suitable')],  # terrain
+            [('4', 'Maize', '1', 3, 'phase', 0, 'None', 100)],  # phase
+            [('4', 'Maize', '1', 4, '2', 3, 'Well drained', 95)]  # drainage
+        ]
+
+        result = GAEZ_crop_req.getGAEZ_requirements_source(
+            CROP_ID='4',
+            inputLevel='L',
+            source='database',
+            requirement_type='all'
+        )
+
+        assert isinstance(result, dict)
+        assert 'profile' in result
+        assert 'texture' in result
+        assert 'terrain' in result
+        assert 'phase' in result
+        assert 'drainage' in result
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_source_connection_error(self, mock_connection):
+        """Test handling of database connection errors"""
+        mock_connection.side_effect = Exception("Connection failed")
+
+        result = GAEZ_crop_req.getGAEZ_requirements_source(
+            CROP_ID='4',
+            inputLevel='L',
+            source='database',
+            requirement_type='profile'
+        )
+
+        assert result is None
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_source_invalid_input_level(self, mock_connection):
+        """Test error handling for invalid input level"""
+        result = GAEZ_crop_req.getGAEZ_requirements_source(
+            CROP_ID='4',
+            inputLevel='X',
+            source='database',
+            requirement_type='profile'
+        )
+
+        assert result == 'Please enter a valid `inputLevel` ("L", "I", or "H")'
+
+    @patch('GAEZ_crop_req.getDataStore_Connection')
+    def test_database_source_invalid_requirement_type(self, mock_connection):
+        """Test error handling for invalid requirement type"""
+        result = GAEZ_crop_req.getGAEZ_requirements_source(
+            CROP_ID='4',
+            inputLevel='L',
+            source='database',
+            requirement_type='invalid'
+        )
+
+        assert result is None
