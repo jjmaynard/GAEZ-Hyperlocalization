@@ -19,20 +19,33 @@ def printdf(df: pd.DataFrame, num_rows: int=5, ignore_geometry: bool = True):
 
 # region Data at a glance
 
-# Load main datasets
-gdb_file = 'data/gSSURGO_CONUS.gdb'  # downloaded from [5]
-layers = gpd.list_layers(gdb_file)
-
-map_units = gpd.read_file(gdb_file, layer="mapunit")
-components = gpd.read_file(gdb_file, layer="component")  # p. 31 of [1] and p. 35 of [2]
-horizons = gpd.read_file(gdb_file, layer="chorizon")  # p. 5 of [1] and p. 5 of [2]
-
-# Uniqueness
+# Configuration
+DEFAULT_GDB_FILE = 'data/gSSURGO_CONUS.gdb'  # downloaded from [5]
 ids_cols = ['mukey', 'cokey', 'chkey']
 
-map_units.filter(ids_cols).nunique()
-components.filter(ids_cols).nunique()
-horizons.filter(ids_cols).nunique()
+def load_gssurgo_datasets(gdb_file=None):
+    """
+    Load main gSSURGO datasets from geodatabase.
+
+    Args:
+        gdb_file: Path to gSSURGO geodatabase file
+
+    Returns:
+        dict: Dictionary containing 'map_units', 'components', 'horizons' DataFrames
+    """
+    if gdb_file is None:
+        gdb_file = DEFAULT_GDB_FILE
+
+    map_units = gpd.read_file(gdb_file, layer="mapunit")
+    components = gpd.read_file(gdb_file, layer="component")  # p. 31 of [1] and p. 35 of [2]
+    horizons = gpd.read_file(gdb_file, layer="chorizon")  # p. 5 of [1] and p. 5 of [2]
+
+    return {
+        'map_units': map_units,
+        'components': components,
+        'horizons': horizons
+    }
+
 # endregion
 
 # region Attributes
@@ -124,7 +137,20 @@ soil_attributes_in_tables = {
 # endregion
 
 # region Load and clean attribute data
-def load_attributes_from_table(table_name):
+def load_attributes_from_table(table_name, gdb_file=None):
+    """
+    Load attributes from a specific gSSURGO table.
+
+    Args:
+        table_name: Name of the table to load
+        gdb_file: Path to gSSURGO geodatabase file
+
+    Returns:
+        pd.DataFrame: DataFrame with renamed columns according to soil_attributes_in_tables
+    """
+    if gdb_file is None:
+        gdb_file = DEFAULT_GDB_FILE
+
     soil_attributes = soil_attributes_in_tables[table_name]
     columns_to_pull = ids_cols + list(soil_attributes.keys())
     data = gpd.read_file(gdb_file, layer=table_name, columns=columns_to_pull)
@@ -132,121 +158,113 @@ def load_attributes_from_table(table_name):
     data.rename(columns=soil_attributes, inplace=True)
     return data
 
-# Site attributes:
-site_attributes = load_attributes_from_table('component')
-# todo: seems that most of the time values (other than reference drainage class) appear once per map unit (mukey), so:
-#       can missing data for slope, aspect, albedo, temp, precip, and frost free days be imputed from components in same map unit?
-#       what to do in cases where these values differ for components in same map unit (e.g. mukey == 74983)?
-#       how to impute missing data for reference drainage class and geomorphology, which do appear more specific to component than map unit?
 
-# Soil attributes:
-chtexture_datasets = [load_attributes_from_table(name) for name in ['chtexture', 'chtexturegrp']]
-chtexture = reduce(lambda df1, df2: pd.merge(df1, df2, on=['chtgkey'], how='outer'), chtexture_datasets)
+def process_texture_data(gdb_file=None):
+    """
+    Process and clean texture data from chtexture and chtexturegrp tables.
 
-chtexture['representative_bool'] = chtexture['representative_yn'] == "Yes"
-chtexture['num_rep_flags'] = chtexture.groupby('chkey')['representative_bool'].transform('sum')
-chtexture = pd.concat([
-    chtexture[chtexture['representative_yn'] == "Yes"],  # filter to representative textures,
-    chtexture[chtexture['num_rep_flags'] == 0]  # but keep components that have no representative texture
+    Args:
+        gdb_file: Path to gSSURGO geodatabase file
+
+    Returns:
+        pd.DataFrame: Processed texture data with one texture per chkey
+    """
+    # Site attributes:
+    chtexture_datasets = [load_attributes_from_table(name, gdb_file) for name in ['chtexture', 'chtexturegrp']]
+    chtexture = reduce(lambda df1, df2: pd.merge(df1, df2, on=['chtgkey'], how='outer'), chtexture_datasets)
+
+    chtexture['representative_bool'] = chtexture['representative_yn'] == "Yes"
+    chtexture['num_rep_flags'] = chtexture.groupby('chkey')['representative_bool'].transform('sum')
+    chtexture = pd.concat([
+        chtexture[chtexture['representative_yn'] == "Yes"],  # filter to representative textures,
+        chtexture[chtexture['num_rep_flags'] == 0]  # but keep components that have no representative texture
     ])
-chtexture['texture_usda'] = chtexture['texture_usda'].str.replace(" ", "").str.lower()  # standardize values
-chtexture['texture_usda'] = chtexture['texture_usda'].str.replace(r'fine|very|coarse', '', regex=True)  # remove modifiers not used in GAEZ
-chtexture['texture_usda'].unique()  # class 'heavy clay (Ch)' not represented in data (pg. 83 of [3])
-chtexture.drop_duplicates(subset=['chkey', 'texture_usda'], inplace=True)  # remove duplicates based on simplified texture classes
-chtexture = chtexture.sample(frac=1, random_state=12).reset_index(drop=True)  # choose random obs of remaining duplicates (differentation bw categories may be coarse enough that choice does not matter)
-chtexture.drop_duplicates(subset=['chkey'], inplace=True)
-# todo: confirm approach to reduce data to one texture observation per component is appropriate
-# todo: is it also interesting to include sand, clay, silt fractions individually, too?
+    chtexture['texture_usda'] = chtexture['texture_usda'].str.replace(" ", "").str.lower()  # standardize values
+    chtexture['texture_usda'] = chtexture['texture_usda'].str.replace(r'fine|very|coarse', '', regex=True)  # remove modifiers not used in GAEZ
+    chtexture.drop_duplicates(subset=['chkey', 'texture_usda'], inplace=True)  # remove duplicates based on simplified texture classes
+    chtexture = chtexture.sample(frac=1, random_state=12).reset_index(drop=True)  # choose random obs of remaining duplicates
+    chtexture.drop_duplicates(subset=['chkey'], inplace=True)
+
+    return chtexture
 
 
-chfrag = load_attributes_from_table('chfrags')
-chfrag.drop_duplicates(inplace=True)
-chfrag = chfrag.groupby('chkey')['fragment_vol_%_by_size'].sum().rename('gravel_%').reset_index()
-# todo: was it correct to sum fragvol by component?
-#       it appears that fragment volume is given for different fragment sizes,
-#       but results (n=34) in some total gravel percents greater than 100%
+def process_fragment_data(gdb_file=None):
+    """
+    Process and aggregate fragment volume data.
+
+    Args:
+        gdb_file: Path to gSSURGO geodatabase file
+
+    Returns:
+        pd.DataFrame: Aggregated fragment data by chkey
+    """
+    chfrag = load_attributes_from_table('chfrags', gdb_file)
+    chfrag.drop_duplicates(inplace=True)
+    chfrag = chfrag.groupby('chkey')['fragment_vol_%_by_size'].sum().rename('gravel_%').reset_index()
+    return chfrag
 
 
-chorizon = load_attributes_from_table('chorizon')
+def calculate_derived_properties(chorizon):
+    """
+    Calculate derived soil properties from horizon data.
 
-chorizon['cec_clay_cmolkg'] = chorizon['cec_soil_cmolkg']/chorizon['clay_%'] * 100
-# todo: is this the correct way to derive clay CEC from soil CEC and clay fraction?
-#       when clay_% equals 0 this equation doesn't make sense b/c it assumes that clay is the only contributor to CEC in soil, disregarding the role of organic matter?
-#       so, should it be dependent on fraction of organic carbon too?
-#       and, should ignore observations where cec_soil > 0 but clay_% == 0 and cec_clay = inf?
+    Args:
+        chorizon: DataFrame with horizon data
 
-chorizon['base_saturation_%'] = chorizon['total_exchangeable_bases_cmolkg'] / chorizon['cec_soil_cmolkg'] * 100
-# todo: is this the correct way to derive base saturation from CEC and TEB?
-#       how to interpret values > 100%?
-#       if CEC soil == 0 does BS just equal TEB? or 0% or 100%
+    Returns:
+        pd.DataFrame: Horizon data with derived properties added
+    """
+    chorizon = chorizon.copy()
 
-chorizon['esp_%'] = (100 * (-0.0126 + 0.01475 * chorizon['sar'])) / (1 + (-0.0126 + 0.01475 * chorizon['sar']))
-# todo: is this the correct way to derive ESP from SAR? the correct cofficients to use?
-#       how to interpret esp_% values < 0%? censor to zero?
-# Richards (1954). Diagnosis and Improvement of Saline and Alkali Soils. p. 26
-# https://books.google.com/books?hl=en&lr=&id=MMYc9CcSwzAC
-# ESR = -0.0126 + 0.01475 * SAR
-# ESP = (ESR * 100) / (1 + ESR)
+    # CEC/clay ratio
+    chorizon['cec_clay_cmolkg'] = chorizon['cec_soil_cmolkg'] / chorizon['clay_%'] * 100
 
-horizon_id_cols = ['horizon_name', 'top_of_horizon_depth_cm', 'bottom_of_horizon_depth_cm']
-soil_attributes = reduce(lambda df1, df2: pd.merge(df1, df2, on=['chkey'], how='outer'),
-                         [chorizon, chtexture, chfrag])
-soil_attributes = soil_attributes.filter(ids_cols + horizon_id_cols + gaez_attributes)
-soil_attributes.sort_values(['cokey', 'top_of_horizon_depth_cm'], inplace=True)
-printdf(soil_attributes.describe(), 15)
-# todo: some values are outside of logical range (e.g. >100%, inf), see specific questions above on how to resolve these
+    # Base saturation
+    chorizon['base_saturation_%'] = chorizon['total_exchangeable_bases_cmolkg'] / chorizon['cec_soil_cmolkg'] * 100
 
-# Master dataset, site and soil attributes
-data = soil_attributes.merge(site_attributes, how='left', on='cokey')
-printdf(data)
+    # ESP from SAR (Richards 1954)
+    chorizon['esp_%'] = (100 * (-0.0126 + 0.01475 * chorizon['sar'])) / (1 + (-0.0126 + 0.01475 * chorizon['sar']))
 
-print("Attributes not found in data:", set(all_attributes) - set(data.columns))
-# todo: how to derive these from gSSURGO data?
-#       {'topsoil_thickness_cm', 'soil_phase', 'organic_carbon_%', 'petric_yn', 'gelic_yn', 'vetric_yn', 'reference_soil_depth_cm', 'obstacles_yn', 'rooting_limit_cm'}
-#       SOC (g/m2) and root zone depth (cm) are in valu1 table [4], which are weighted averages of components by map unit so:
-#       how to derive this information on a per component basis? or is it appropriate to assume all components in map unit share same values?
-# valu1 = gpd.read_file(gdb_file, layer="valu1")
-
-# endregion
-
-# region Investigate geometry
-print(layers[layers['geometry_type'].notnull()])
-# of all layers with geometry MUPOLYGON appears to be the only one that maps to key in data and is complete
-# there are a total of 319,598 polygons (vs 320,070 unique map units in tables)
-mapunit_polys = gpd.read_file(gdb_file, layer="MUPOLYGON", rows=50)  # load a subset
-printdf(mapunit_polys)
-# todo: is there latitude/longitude for components?
-#       otherwise how did slope, elev, aspect, temp, precip, etc. get measured for each component? see components table above
-#       these also seem to relate to variables in 'components' table of NASIS data - so can we take point data from there?
-
-# endregion
-
-# region Investigate missingness
-
-# Prevalence of missing data
-non_null_percents = (~data.isnull()).sum()/len(data)
-print(non_null_percents)
-
-print("Missingness > 25%:\n", non_null_percents[non_null_percents < 0.75])
-# todo: is there a better/other way to derive/measure these variables, in particular, as the ones with the most missingness?
-#       e.g. aspect_deg can be taken from a DEM
-#       if the are missing, are they irrelevant to that soil?
+    return chorizon
 
 
-# Subset: complete data on all (known) attributes
-total_components_raw = data['cokey'].nunique()
-data_complete_attributes = data.dropna(axis='rows', how='any',
-                                       subset=set(all_attributes).intersection(set(data.columns)))
-n_components_complete_attributes = data_complete_attributes['cokey'].nunique()
+def build_soil_attributes_dataset(gdb_file=None):
+    """
+    Build complete soil attributes dataset from gSSURGO data.
 
-# Subset: complete data on SQ1/2 (nutrient availability) attributes
-# todo: however missing any data on organic carbon!
-data_sq1or2_attributes = data.dropna(axis='rows', how='any',
-                                       subset=set(gaez_attributes_sq1or2).intersection(set(data.columns)))
-n_components_sq1or2_attributes = data_sq1or2_attributes['cokey'].nunique()
+    Args:
+        gdb_file: Path to gSSURGO geodatabase file
 
-# Subset: complete data on all (known) attributes and no gaps in depth up to 112 cm
+    Returns:
+        pd.DataFrame: Complete soil attributes dataset
+    """
+    # Load and process components
+    chorizon = load_attributes_from_table('chorizon', gdb_file)
+    chorizon = calculate_derived_properties(chorizon)
+
+    chtexture = process_texture_data(gdb_file)
+    chfrag = process_fragment_data(gdb_file)
+
+    horizon_id_cols = ['horizon_name', 'top_of_horizon_depth_cm', 'bottom_of_horizon_depth_cm']
+    soil_attributes = reduce(lambda df1, df2: pd.merge(df1, df2, on=['chkey'], how='outer'),
+                             [chorizon, chtexture, chfrag])
+    soil_attributes = soil_attributes.filter(ids_cols + horizon_id_cols + gaez_attributes)
+    soil_attributes.sort_values(['cokey', 'top_of_horizon_depth_cm'], inplace=True)
+
+    return soil_attributes
+
+
 def filter_data_by_depth(df, max_depth):
+    """
+    Filter data to components with complete depth coverage.
+
+    Args:
+        df: DataFrame with depth data
+        max_depth: Maximum depth required (cm)
+
+    Returns:
+        pd.DataFrame: Filtered data with complete depth coverage
+    """
     max_depth = 112
     complete_depths = df.groupby('cokey').filter(
         lambda df: (df.top_of_horizon_depth_cm.notna().all()) & (df.bottom_of_horizon_depth_cm.notna().all()))
@@ -256,18 +274,93 @@ def filter_data_by_depth(df, max_depth):
         lambda df: ~((df.top_of_horizon_depth_cm.shift(-1) - df.bottom_of_horizon_depth_cm) > 0).any())
     return complete_depths
 
-data_complete = filter_data_by_depth(data_complete_attributes, 112)
-n_components_complete = data_complete['cokey'].nunique()
 
-data_complete_sq1or2 = filter_data_by_depth(data_sq1or2_attributes, 112)
-n_components_complete_sq1or2 = data_complete_sq1or2['cokey'].nunique()
+def main():
+    """Main exploratory data analysis workflow."""
+    gdb_file = DEFAULT_GDB_FILE
 
-# Summarize
-list_of_samples_sizes = [total_components_raw, n_components_complete_attributes, n_components_sq1or2_attributes,
-                     n_components_complete, n_components_complete_sq1or2]
-print(pd.DataFrame({
-    'subset': ['raw', 'complete_attributes', 'complete_sq1or2_attributes', 'complete_with_depth', 'complete_sq1or2_with_depth'],
-    'n_components': list_of_samples_sizes,
-    'pct_of_raw': [round( n / total_components_raw * 100, 1) for n in list_of_samples_sizes]
-}))
-# endregion
+    # Load datasets
+    print("Loading gSSURGO datasets...")
+    layers = gpd.list_layers(gdb_file)
+    datasets = load_gssurgo_datasets(gdb_file)
+
+    # Site attributes
+    site_attributes = load_attributes_from_table('component', gdb_file)
+    # todo: seems that most of the time values (other than reference drainage class) appear once per map unit (mukey), so:
+    #       can missing data for slope, aspect, albedo, temp, precip, and frost free days be imputed from components in same map unit?
+    #       what to do in cases where these values differ for components in same map unit (e.g. mukey == 74983)?
+    #       how to impute missing data for reference drainage class and geomorphology, which do appear more specific to component than map unit?
+
+    # Soil attributes
+    soil_attributes = build_soil_attributes_dataset(gdb_file)
+    printdf(soil_attributes.describe(), 15)
+    # todo: some values are outside of logical range (e.g. >100%, inf), see specific questions above on how to resolve these
+
+    # Master dataset, site and soil attributes
+    data = soil_attributes.merge(site_attributes, how='left', on='cokey')
+    printdf(data)
+
+    print("Attributes not found in data:", set(all_attributes) - set(data.columns))
+    # todo: how to derive these from gSSURGO data?
+    #       {'topsoil_thickness_cm', 'soil_phase', 'organic_carbon_%', 'petric_yn', 'gelic_yn', 'vetric_yn', 'reference_soil_depth_cm', 'obstacles_yn', 'rooting_limit_cm'}
+    #       SOC (g/m2) and root zone depth (cm) are in valu1 table [4], which are weighted averages of components by map unit so:
+    #       how to derive this information on a per component basis? or is it appropriate to assume all components in map unit share same values?
+    # valu1 = gpd.read_file(gdb_file, layer="valu1")
+
+    # endregion
+
+    # region Investigate geometry
+    print(layers[layers['geometry_type'].notnull()])
+    # of all layers with geometry MUPOLYGON appears to be the only one that maps to key in data and is complete
+    # there are a total of 319,598 polygons (vs 320,070 unique map units in tables)
+    mapunit_polys = gpd.read_file(gdb_file, layer="MUPOLYGON", rows=50)  # load a subset
+    printdf(mapunit_polys)
+    # todo: is there latitude/longitude for components?
+    #       otherwise how did slope, elev, aspect, temp, precip, etc. get measured for each component? see components table above
+    #       these also seem to relate to variables in 'components' table of NASIS data - so can we take point data from there?
+
+    # endregion
+
+    # region Investigate missingness
+
+    # Prevalence of missing data
+    non_null_percents = (~data.isnull()).sum()/len(data)
+    print(non_null_percents)
+
+    print("Missingness > 25%:\n", non_null_percents[non_null_percents < 0.75])
+    # todo: is there a better/other way to derive/measure these variables, in particular, as the ones with the most missingness?
+    #       e.g. aspect_deg can be taken from a DEM
+    #       if the are missing, are they irrelevant to that soil?
+
+    # Subset: complete data on all (known) attributes
+    total_components_raw = data['cokey'].nunique()
+    data_complete_attributes = data.dropna(axis='rows', how='any',
+                                           subset=set(all_attributes).intersection(set(data.columns)))
+    n_components_complete_attributes = data_complete_attributes['cokey'].nunique()
+
+    # Subset: complete data on SQ1/2 (nutrient availability) attributes
+    # todo: however missing any data on organic carbon!
+    data_sq1or2_attributes = data.dropna(axis='rows', how='any',
+                                           subset=set(gaez_attributes_sq1or2).intersection(set(data.columns)))
+    n_components_sq1or2_attributes = data_sq1or2_attributes['cokey'].nunique()
+
+    # Subset: complete data on all (known) attributes and no gaps in depth up to 112 cm
+    data_complete = filter_data_by_depth(data_complete_attributes, 112)
+    n_components_complete = data_complete['cokey'].nunique()
+
+    data_complete_sq1or2 = filter_data_by_depth(data_sq1or2_attributes, 112)
+    n_components_complete_sq1or2 = data_complete_sq1or2['cokey'].nunique()
+
+    # Summarize
+    list_of_samples_sizes = [total_components_raw, n_components_complete_attributes, n_components_sq1or2_attributes,
+                         n_components_complete, n_components_complete_sq1or2]
+    print(pd.DataFrame({
+        'subset': ['raw', 'complete_attributes', 'complete_sq1or2_attributes', 'complete_with_depth', 'complete_sq1or2_with_depth'],
+        'n_components': list_of_samples_sizes,
+        'pct_of_raw': [round( n / total_components_raw * 100, 1) for n in list_of_samples_sizes]
+    }))
+    # endregion
+
+
+if __name__ == '__main__':
+    main()
