@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import sys
+from unittest.mock import patch, MagicMock
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -75,10 +76,20 @@ class TestProcessPlotData:
     """Tests for process_plot_data function."""
 
     @pytest.mark.unit
-    def test_process_plot_data_returns_dataframe(self, sample_plot_data, sample_map_data):
+    @patch('GAEZ_soil_data_processing.rasterio.sample.sample_gen')
+    @patch('GAEZ_soil_data_processing.rasterio.open')
+    def test_process_plot_data_returns_dataframe(self, mock_rasterio_open, mock_sample_gen, sample_plot_data, sample_map_data):
         """Test that function returns a DataFrame."""
         try:
             from GAEZ_soil_data_processing import process_plot_data
+
+            # Mock the rasterio dataset
+            mock_dataset = MagicMock()
+            mock_rasterio_open.return_value.__enter__.return_value = mock_dataset
+
+            # Mock the sample_gen function to return slope value
+            mock_sample_gen.return_value = iter([[5.0]])
+
             result = process_plot_data(sample_plot_data, sample_map_data)
             assert isinstance(result, pd.DataFrame), "Should return a DataFrame"
         except ImportError:
@@ -95,10 +106,20 @@ class TestProcessPlotData:
             pytest.skip("Function not directly importable")
 
     @pytest.mark.unit
-    def test_process_plot_data_integrates_field_observations(self, sample_plot_data, sample_map_data):
+    @patch('GAEZ_soil_data_processing.rasterio.sample.sample_gen')
+    @patch('GAEZ_soil_data_processing.rasterio.open')
+    def test_process_plot_data_integrates_field_observations(self, mock_rasterio_open, mock_sample_gen, sample_plot_data, sample_map_data):
         """Test that field observations are integrated into map data."""
         try:
             from GAEZ_soil_data_processing import process_plot_data
+
+            # Mock the rasterio dataset
+            mock_dataset = MagicMock()
+            mock_rasterio_open.return_value.__enter__.return_value = mock_dataset
+
+            # Mock the sample_gen function to return slope value
+            mock_sample_gen.return_value = iter([[5.0]])
+
             result = process_plot_data(sample_plot_data, sample_map_data)
 
             # Result should have similar structure but potentially updated values
@@ -148,10 +169,20 @@ class TestProcessSiteData:
     """Tests for process_site_data function."""
 
     @pytest.mark.unit
-    def test_process_site_data_returns_dataframe(self, sample_site_data, sample_map_data):
+    @patch('GAEZ_soil_data_processing.rasterio.sample.sample_gen')
+    @patch('GAEZ_soil_data_processing.rasterio.open')
+    def test_process_site_data_returns_dataframe(self, mock_rasterio_open, mock_sample_gen, sample_site_data, sample_map_data):
         """Test that function returns a DataFrame."""
         try:
             from GAEZ_soil_data_processing import process_site_data
+
+            # Mock the rasterio dataset
+            mock_dataset = MagicMock()
+            mock_rasterio_open.return_value.__enter__.return_value = mock_dataset
+
+            # Mock the sample_gen function to return slope value
+            mock_sample_gen.return_value = iter([[3.5]])
+
             result = process_site_data(sample_site_data, sample_map_data)
             assert isinstance(result, pd.DataFrame), "Should return a DataFrame"
         except ImportError:
@@ -168,10 +199,20 @@ class TestProcessSiteData:
             pytest.skip("Function not directly importable")
 
     @pytest.mark.unit
-    def test_process_site_data_updates_site_properties(self, sample_site_data, sample_map_data):
+    @patch('GAEZ_soil_data_processing.rasterio.sample.sample_gen')
+    @patch('GAEZ_soil_data_processing.rasterio.open')
+    def test_process_site_data_updates_site_properties(self, mock_rasterio_open, mock_sample_gen, sample_site_data, sample_map_data):
         """Test that site observations update profile-level properties."""
         try:
             from GAEZ_soil_data_processing import process_site_data
+
+            # Mock the rasterio dataset
+            mock_dataset = MagicMock()
+            mock_rasterio_open.return_value.__enter__.return_value = mock_dataset
+
+            # Mock the sample_gen function to return slope value
+            mock_sample_gen.return_value = iter([[3.5]])
+
             result = process_site_data(sample_site_data, sample_map_data)
 
             # Site data should update profile-level attributes
@@ -185,7 +226,9 @@ class TestProcessSiteData:
 class TestDataIntegrationWorkflow:
     """Integration tests for complete data integration workflow."""
 
-    def test_sequential_data_integration(self, sample_plot_data, sample_lab_data,
+    @patch('GAEZ_soil_data_processing.rasterio.sample.sample_gen')
+    @patch('GAEZ_soil_data_processing.rasterio.open')
+    def test_sequential_data_integration(self, mock_rasterio_open, mock_sample_gen, sample_plot_data, sample_lab_data,
                                         sample_site_data, sample_map_data):
         """Test that all three data sources can be integrated sequentially."""
         try:
@@ -194,6 +237,13 @@ class TestDataIntegrationWorkflow:
                 process_lab_data,
                 process_site_data
             )
+
+            # Mock the rasterio dataset for both plot and site data processing
+            mock_dataset = MagicMock()
+            mock_rasterio_open.return_value.__enter__.return_value = mock_dataset
+
+            # Mock the sample_gen function to return slope value
+            mock_sample_gen.return_value = iter([[5.0]])
 
             # Apply in sequence as done in gaez_sqi_ratings
             result = sample_map_data.copy()
@@ -206,10 +256,19 @@ class TestDataIntegrationWorkflow:
         except ImportError:
             pytest.skip("Functions not directly importable")
 
-    def test_data_integration_preserves_cokey(self, sample_plot_data, sample_map_data):
+    @patch('GAEZ_soil_data_processing.rasterio.sample.sample_gen')
+    @patch('GAEZ_soil_data_processing.rasterio.open')
+    def test_data_integration_preserves_cokey(self, mock_rasterio_open, mock_sample_gen, sample_plot_data, sample_map_data):
         """Test that data integration preserves component key."""
         try:
             from GAEZ_soil_data_processing import process_plot_data
+
+            # Mock the rasterio dataset
+            mock_dataset = MagicMock()
+            mock_rasterio_open.return_value.__enter__.return_value = mock_dataset
+
+            # Mock the sample_gen function to return slope value
+            mock_sample_gen.return_value = iter([[5.0]])
 
             result = process_plot_data(sample_plot_data, sample_map_data)
 
