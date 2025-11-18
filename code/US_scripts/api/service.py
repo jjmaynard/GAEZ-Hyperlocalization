@@ -289,7 +289,11 @@ class GAEZCalculationService:
 
             # Extract unique mukeys from raster
             import numpy as np
-            mukeys = np.unique(mukey_raster[mukey_raster > 0]).tolist()
+            raster_data = mukey_raster.read(1)  # Read first band as numpy array
+            mukeys = np.unique(raster_data[raster_data > 0]).tolist()
+
+            # Close the rasterio dataset to free resources
+            mukey_raster.close()
 
             if not mukeys:
                 raise SSURGODataError("No valid SSURGO map units found at location")
