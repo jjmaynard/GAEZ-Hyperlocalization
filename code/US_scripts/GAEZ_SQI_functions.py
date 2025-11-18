@@ -232,9 +232,13 @@ def calculate_SQ1(data, profile_req, texture_req, inputLevel, wts):
         ph_score = constraint_curve(ph, sq1_ph_req[['score', 'property_value']])
         
         # texture score
-        text_class_id = str(layer['texture_class_id'])
-        txt_req = texture_req.query(f'SQI_code == 1 & text_class_id == {text_class_id}').reset_index(drop=True)
-        txt_score = txt_req['score'].iloc[0] if not txt_req.empty else 100
+        text_class_id_raw = layer['texture_class_id']
+        if pd.isna(text_class_id_raw):
+            txt_score = 100
+        else:
+            text_class_id = str(text_class_id_raw)
+            txt_req = texture_req.query(f'SQI_code == 1 & text_class_id == {text_class_id}').reset_index(drop=True)
+            txt_score = txt_req['score'].iloc[0] if not txt_req.empty else 100
 
         # For topsoil only
         if s == 0:
@@ -285,9 +289,13 @@ def calculate_SQ2(data, profile_req, texture_req, inputLevel, wts):
 
         # Texture score only for high input level
         if inputLevel == 'H':
-            text_class_id = str(layer['texture_class_id'])
-            txt_req = texture_req.query(f'SQI_code == 2 & text_class_id == {text_class_id}').reset_index(drop=True)
-            txt_score = txt_req['score'].iloc[0] if not txt_req.empty else 100
+            text_class_id_raw = layer['texture_class_id']
+            if pd.isna(text_class_id_raw):
+                txt_score = 100
+            else:
+                text_class_id = str(text_class_id_raw)
+                txt_req = texture_req.query(f'SQI_code == 2 & text_class_id == {text_class_id}').reset_index(drop=True)
+                txt_score = txt_req['score'].iloc[0] if not txt_req.empty else 100
         else:
             txt_score = None
 
@@ -396,9 +404,13 @@ def calculate_SQ3(data, profile_req, texture_req, phase_req, wts):
         layer = data.iloc[s]
 
         # Texture
-        text_class_id = str(layer['texture_class_id'])
-        sq3_text_req = texture_req.query(f'SQI_code == 3 & text_class_id == {text_class_id}').reset_index(drop=True)
-        sq3_txt_score = sq3_text_req['score'].iloc[0] if not sq3_text_req.empty else 100
+        text_class_id_raw = layer['texture_class_id']
+        if pd.isna(text_class_id_raw):
+            sq3_txt_score = 100
+        else:
+            text_class_id = str(text_class_id_raw)
+            sq3_text_req = texture_req.query(f'SQI_code == 3 & text_class_id == {text_class_id}').reset_index(drop=True)
+            sq3_txt_score = sq3_text_req['score'].iloc[0] if not sq3_text_req.empty else 100
 
         # Compactness (bulk density)
         db_dc = layer['db']
@@ -683,9 +695,13 @@ def calculate_SQ7(data, phase_req, profile_req, texture_req, wts):
     for i in range(len(data)):
         layer = data.iloc[i]
 
-        text_class_id = str(layer['texture_class_id'])
-        txt_req = texture_req.query(f'SQI_code == 7 & text_class_id == {text_class_id}').reset_index(drop=True)
-        txt_score = txt_req['score'].iloc[0] if not txt_req.empty else 100
+        text_class_id_raw = layer['texture_class_id']
+        if pd.isna(text_class_id_raw):
+            txt_score = 100
+        else:
+            text_class_id = str(text_class_id_raw)
+            txt_req = texture_req.query(f'SQI_code == 7 & text_class_id == {text_class_id}').reset_index(drop=True)
+            txt_score = txt_req['score'].iloc[0] if not txt_req.empty else 100
 
         db_dc = data['db'].iloc[0]
         db_req = profile_req.query('SQI_code == 7 & property == "db"').sort_values(by='property_value', ascending=True).reset_index(drop=True)
