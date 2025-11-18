@@ -26,6 +26,14 @@ class Location(BaseModel):
             raise ValueError(f"{info.field_name} cannot be None")
         return v
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {"latitude": 41.2, "longitude": -101.6}
+            ]
+        }
+    }
+
 
 class PlotDataHorizon(BaseModel):
     """User-provided plot/field measurements for a soil horizon."""
@@ -67,6 +75,23 @@ class PlotDataHorizon(BaseModel):
                 raise ValueError(f"Sand + Silt + Clay must sum to 100, got {total}")
         return self
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "horizon_id": "Ap",
+                    "top_depth": 0,
+                    "bottom_depth": 25,
+                    "sand_pct": 45,
+                    "silt_pct": 35,
+                    "clay_pct": 20,
+                    "ph": 6.5,
+                    "organic_matter_pct": 3.2
+                }
+            ]
+        }
+    }
+
 
 class SiteData(BaseModel):
     """User-provided site characteristics."""
@@ -82,6 +107,17 @@ class SiteData(BaseModel):
     cemented_layer_depth_cm: Optional[float] = Field(None, ge=0, description="Depth to cemented layer in cm")
     flooding_frequency: Optional[str] = Field(None, description="Flooding frequency class")
     ponding_frequency: Optional[str] = Field(None, description="Ponding frequency class")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "drainage_class": "well drained",
+                    "slope_pct": 2.5
+                }
+            ]
+        }
+    }
 
 
 class LabData(BaseModel):
@@ -111,6 +147,20 @@ class LabData(BaseModel):
 
     # Physical properties
     bulk_density_g_cm3: Optional[float] = Field(None, ge=0, description="Bulk density (g/cm³)")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "sample_id": "Lab-001",
+                    "depth_cm": 15,
+                    "ph_h2o": 6.5,
+                    "organic_carbon_pct": 1.86,
+                    "cec_cmol_kg": 18.5
+                }
+            ]
+        }
+    }
 
 
 class UserData(BaseModel):
@@ -142,6 +192,50 @@ class CalculationRequest(BaseModel):
         le=1000,
         description="Spatial resolution for SSURGO data in meters"
     )
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "location": {"latitude": 41.2, "longitude": -101.6},
+                    "crop_id": "4",
+                    "input_level": "L"
+                },
+                {
+                    "location": {"latitude": 41.2, "longitude": -101.6},
+                    "crop_id": "4",
+                    "input_level": "H",
+                    "user_data": {
+                        "plot_data": [
+                            {
+                                "horizon_id": "Ap",
+                                "top_depth": 0,
+                                "bottom_depth": 25,
+                                "sand_pct": 45,
+                                "silt_pct": 35,
+                                "clay_pct": 20,
+                                "ph": 6.5,
+                                "organic_matter_pct": 3.2
+                            }
+                        ],
+                        "site_data": {
+                            "drainage_class": "well drained",
+                            "slope_pct": 2.5
+                        },
+                        "lab_data": [
+                            {
+                                "sample_id": "Lab-001",
+                                "depth_cm": 15,
+                                "ph_h2o": 6.5,
+                                "organic_carbon_pct": 1.86,
+                                "cec_cmol_kg": 18.5
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    }
 
 
 class SoilQualityIndices(BaseModel):
