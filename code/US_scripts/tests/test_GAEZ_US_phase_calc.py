@@ -14,10 +14,24 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
+def get_default_phase_columns(nrows=1):
+    """Get default columns required for phase classification."""
+    return {
+        'reskind': [None] * nrows,
+        'reshard': [None] * nrows,
+        'fragkind': [None] * nrows,
+        'wtdepannmin': [None] * nrows,
+        'hydricrating': ['No'] * nrows,
+        'pondfreqcl': [None] * nrows,
+        'flodfreqcl': [None] * nrows,
+        'rd': [200] * nrows
+    }
+
+
 @pytest.fixture
 def sample_soil_component_data():
     """Create sample soil component data for phase classification."""
-    return pd.DataFrame({
+    data = {
         'cokey': ['12345', '12345', '12345'],
         'hzdept_r': [0, 20, 50],
         'hzdepb_r': [20, 50, 100],
@@ -30,7 +44,9 @@ def sample_soil_component_data():
         'taxtemperature': ['Mesic', 'Mesic', 'Mesic'],
         'taxminalogy': ['Mixed', 'Mixed', 'Mixed'],
         'resdept_r': [200, 200, 200]
-    })
+    }
+    data.update(get_default_phase_columns(3))
+    return pd.DataFrame(data)
 
 
 class TestPhaseClassification:
@@ -69,7 +85,7 @@ class TestStonyPhaseClassification:
         try:
             from GAEZ_US_phase_calc import classify_gaez_v4_phases
 
-            data = pd.DataFrame({
+            data_dict = {
                 'cokey': ['12345'],
                 'hzdept_r': [0],
                 'hzdepb_r': [50],
@@ -82,7 +98,9 @@ class TestStonyPhaseClassification:
                 'taxtemperature': ['Mesic'],
                 'taxminalogy': ['Mixed'],
                 'resdept_r': [200]
-            })
+            }
+            data_dict.update(get_default_phase_columns(1))
+            data = pd.DataFrame(data_dict)
 
             result = classify_gaez_v4_phases(data)
             # Should have stony or petric phase
@@ -101,7 +119,7 @@ class TestSalinePhaseClassification:
         try:
             from GAEZ_US_phase_calc import classify_gaez_v4_phases
 
-            data = pd.DataFrame({
+            data_dict = {
                 'cokey': ['12345'],
                 'hzdept_r': [0],
                 'hzdepb_r': [50],
@@ -114,7 +132,9 @@ class TestSalinePhaseClassification:
                 'taxtemperature': ['Mesic'],
                 'taxminalogy': ['Mixed'],
                 'resdept_r': [200]
-            })
+            }
+            data_dict.update(get_default_phase_columns(1))
+            data = pd.DataFrame(data_dict)
 
             result = classify_gaez_v4_phases(data)
             assert 'phase_ids_list' in result.columns
@@ -131,7 +151,7 @@ class TestSodicPhaseClassification:
         try:
             from GAEZ_US_phase_calc import classify_gaez_v4_phases
 
-            data = pd.DataFrame({
+            data_dict = {
                 'cokey': ['12345'],
                 'hzdept_r': [0],
                 'hzdepb_r': [50],
@@ -144,7 +164,9 @@ class TestSodicPhaseClassification:
                 'taxtemperature': ['Mesic'],
                 'taxminalogy': ['Mixed'],
                 'resdept_r': [200]
-            })
+            }
+            data_dict.update(get_default_phase_columns(1))
+            data = pd.DataFrame(data_dict)
 
             result = classify_gaez_v4_phases(data)
             assert 'phase_ids_list' in result.columns
@@ -161,7 +183,7 @@ class TestVerticPhaseClassification:
         try:
             from GAEZ_US_phase_calc import classify_gaez_v4_phases
 
-            data = pd.DataFrame({
+            data_dict = {
                 'cokey': ['12345'],
                 'hzdept_r': [0],
                 'hzdepb_r': [50],
@@ -174,7 +196,9 @@ class TestVerticPhaseClassification:
                 'taxtemperature': ['Mesic'],
                 'taxminalogy': ['Smectitic'],  # Vertic mineralogy
                 'resdept_r': [200]
-            })
+            }
+            data_dict.update(get_default_phase_columns(1))
+            data = pd.DataFrame(data_dict)
 
             result = classify_gaez_v4_phases(data)
             if 'vertic' in result.columns:
@@ -192,7 +216,7 @@ class TestGelicPhaseClassification:
         try:
             from GAEZ_US_phase_calc import classify_gaez_v4_phases
 
-            data = pd.DataFrame({
+            data_dict = {
                 'cokey': ['12345'],
                 'hzdept_r': [0],
                 'hzdepb_r': [50],
@@ -205,7 +229,9 @@ class TestGelicPhaseClassification:
                 'taxtemperature': ['Pergelic'],  # Cold temperature class
                 'taxminalogy': ['Mixed'],
                 'resdept_r': [200]
-            })
+            }
+            data_dict.update(get_default_phase_columns(1))
+            data = pd.DataFrame(data_dict)
 
             result = classify_gaez_v4_phases(data)
             if 'gelic' in result.columns:
@@ -223,7 +249,7 @@ class TestDrainagePhaseClassification:
         try:
             from GAEZ_US_phase_calc import classify_gaez_v4_phases
 
-            data = pd.DataFrame({
+            data_dict = {
                 'cokey': ['12345'],
                 'hzdept_r': [0],
                 'hzdepb_r': [50],
@@ -236,7 +262,9 @@ class TestDrainagePhaseClassification:
                 'taxtemperature': ['Mesic'],
                 'taxminalogy': ['Mixed'],
                 'resdept_r': [200]
-            })
+            }
+            data_dict.update(get_default_phase_columns(1))
+            data = pd.DataFrame(data_dict)
 
             result = classify_gaez_v4_phases(data)
             assert 'phase_ids_list' in result.columns
@@ -302,7 +330,7 @@ class TestPhaseClassificationIntegration:
             from GAEZ_US_phase_calc import classify_gaez_v4_phases
 
             # Create soil with multiple constraints
-            data = pd.DataFrame({
+            data_dict = {
                 'cokey': ['12345'],
                 'hzdept_r': [0],
                 'hzdepb_r': [50],
@@ -315,7 +343,9 @@ class TestPhaseClassificationIntegration:
                 'taxtemperature': ['Mesic'],
                 'taxminalogy': ['Mixed'],
                 'resdept_r': [200]
-            })
+            }
+            data_dict.update(get_default_phase_columns(1))
+            data = pd.DataFrame(data_dict)
 
             result = classify_gaez_v4_phases(data)
 

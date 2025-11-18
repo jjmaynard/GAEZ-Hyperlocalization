@@ -195,9 +195,29 @@ def getTextGroup(field):
     return next((key for key, value in texture_group_map.items() if field.lower() in value), np.nan)
 
 
-def gettt(row, sand=None, silt=None, clay=None):
-    if sand is None or silt is None or clay is None:
-        sand, silt, clay = row['sand'], row['silt'], row['clay']
+def gettt(sand, silt=None, clay=None, row=None):
+    """
+    Determine USDA texture class from sand, silt, and clay percentages.
+
+    Can be called in two ways:
+    1. gettt(sand, silt, clay) - direct values
+    2. gettt(row=dataframe_row) - extract from row
+    """
+    # Handle row-based call
+    if row is not None and isinstance(row, (dict, pd.Series)):
+        sand = row['sand']
+        silt = row['silt']
+        clay = row['clay']
+    # Handle positional arguments (sand, silt, clay)
+    elif silt is None or clay is None:
+        # If called with a single argument that's a row-like object
+        if hasattr(sand, '__getitem__'):
+            row = sand
+            sand = row['sand']
+            silt = row['silt']
+            clay = row['clay']
+        else:
+            raise ValueError("Must provide either (sand, silt, clay) or row parameter")
 
     silt_clay = silt + 1.5 * clay
     silt_2_clay = silt + 2.0 * clay
@@ -244,10 +264,30 @@ def getTXT_id(texture):
     return get_property_by_texture(texture, texture_id_map) 
 
 
-def classify_pscl(row):
-    clay = row['clay']
-    sand = row['sand']
-    texture = row['texture'].lower().strip() if pd.notnull(row['texture']) else ''
+def classify_pscl(texture_or_row, clay=None, sand=None):
+    """
+    Classify particle size class (coarse/medium/fine) from texture.
+
+    Can be called in two ways:
+    1. classify_pscl(texture_name) - from texture string
+    2. classify_pscl(row) - extract from row with 'texture', 'clay', 'sand' columns
+    """
+    # Handle row-based call
+    if isinstance(texture_or_row, (dict, pd.Series)):
+        row = texture_or_row
+        clay = row.get('clay', 0) if pd.notnull(row.get('clay')) else 0
+        sand = row.get('sand', 0) if pd.notnull(row.get('sand')) else 0
+        texture = row['texture'].lower().strip() if pd.notnull(row.get('texture')) else ''
+    # Handle texture string call
+    elif isinstance(texture_or_row, str):
+        texture = texture_or_row.lower().strip()
+        # If clay and sand not provided, classify purely on texture name
+        if clay is None:
+            clay = 0
+        if sand is None:
+            sand = 0
+    else:
+        return 'unknown'
 
     # Texture class groups from FAO definitions
     coarse_textures = ['sand', 'loamy sand', 'sandy loam']
@@ -264,6 +304,8 @@ def classify_pscl(row):
         # Fallback: maybe medium?
         elif clay < 35 and sand < 65 or (sand <= 82 and clay >= 18):
             return 'm'
+        else:
+            return 'f'  # Default for fine textures
 
     if texture in medium_textures:
         if clay < 35 and sand < 65 or (sand <= 82 and clay >= 18):
@@ -271,6 +313,8 @@ def classify_pscl(row):
         # Fallback: maybe fine?
         elif clay > 35:
             return 'f'
+        else:
+            return 'm'  # Default for medium textures
 
     if texture in coarse_textures:
         if clay < 18 and sand > 65:
@@ -278,6 +322,8 @@ def classify_pscl(row):
         # Fallback: maybe medium?
         elif clay < 35 and sand < 65 or (sand <= 82 and clay >= 18):
             return 'm'
+        else:
+            return 'c'  # Default for coarse textures
 
     return 'unknown'
 

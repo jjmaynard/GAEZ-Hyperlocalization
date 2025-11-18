@@ -66,23 +66,61 @@ def sample_crop_requirements():
     Returns a dictionary with profile, texture, phase, and drainage requirements.
     """
     profile_req = pd.DataFrame({
-        'SQI_code': [1, 1, 1, 1, 2, 2, 3, 3, 5, 5],
-        'property': ['oc', 'oc', 'ph', 'ph', 'bs', 'bs', 'rd', 'rd', 'ec', 'ec'],
-        'property_value': [0.5, 2.0, 5.5, 7.5, 20, 80, 30, 100, 0, 8],
-        'score': [40, 100, 60, 100, 50, 100, 60, 100, 100, 50]
+        'SQI_code': [1, 1, 1, 1, 1, 1,
+                     2, 2, 2, 2, 2, 2, 2, 2,
+                     3, 3, 3, 3,
+                     5, 5, 5, 5,
+                     6, 6, 6, 6,
+                     7, 7],
+        'property': ['oc', 'oc', 'ph', 'ph', 'teb', 'teb',
+                     'bs', 'bs', 'cecs', 'cecs', 'ph', 'ph', 'cecc', 'cecc',
+                     'db', 'db', 'cf', 'cf',
+                     'esp', 'esp', 'ec', 'ec',
+                     'ca', 'ca', 'gy', 'gy',
+                     'rd', 'rd'],
+        'property_value': [0.5, 2.0, 5.5, 7.5, 5, 15,
+                          20, 80, 5, 20, 5.5, 7.5, 20, 80,
+                          1.2, 1.8, 10, 40,
+                          5, 20, 2, 8,
+                          5, 20, 2, 10,
+                          30, 100],
+        'score': [40, 100, 60, 100, 60, 100,
+                  50, 100, 60, 100, 60, 100, 60, 100,
+                  100, 60, 100, 50,
+                  100, 60, 100, 50,
+                  100, 70, 100, 60,
+                  60, 100]
     })
 
     texture_req = pd.DataFrame({
-        'SQI_code': [1, 1, 1, 2, 2, 3, 3],
-        'text_class_id': ['5', '7', '9', '5', '7', '5', '7'],
-        'score': [85, 95, 90, 90, 95, 90, 95]
+        'SQI_code': [1, 1, 1, 1, 1,
+                     2, 2, 2, 2, 2,
+                     3, 3, 3, 3, 3],
+        'text_class_id': ['5', '7', '9', '11', '12',
+                          '5', '7', '9', '11', '12',
+                          '5', '7', '9', '11', '12'],
+        'score': [85, 95, 90, 80, 75,
+                  90, 95, 92, 85, 80,
+                  90, 95, 93, 88, 82]
     })
 
     phase_req = pd.DataFrame({
-        'SQI_code': [3, 3, 4, 5],
-        'property': ['phase', 'roots', 'phase', 'phase'],
-        'phase_id': [0, 0, 0, 0],
-        'score': [100, 100, 100, 100]
+        'SQI_code': [3, 3, 3, 3, 3,
+                     4, 4,
+                     5, 5, 5,
+                     6, 6, 6],
+        'property': ['phase', 'roots', 'il', 'vertic', 'gelic',
+                     'phase', 'phase',
+                     'phase', 'phase', 'phase',
+                     'phase', 'phase', 'phase'],
+        'phase_id': [0, 0, 0, 0, 0,
+                     0, 1,
+                     0, 1, 2,
+                     0, 1, 2],
+        'score': [100, 100, 100, 100, 100,
+                  100, 90,
+                  100, 85, 70,
+                  100, 90, 75]
     })
 
     drainage_req = pd.DataFrame({
