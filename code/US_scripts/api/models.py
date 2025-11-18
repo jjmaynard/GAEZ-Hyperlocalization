@@ -29,7 +29,7 @@ class Location(BaseModel):
     model_config = {
         "json_schema_extra": {
             "examples": [
-                {"latitude": 41.2, "longitude": -101.6}
+                {"latitude": 37.3988876, "longitude": -101.0458298}
             ]
         }
     }
@@ -197,12 +197,12 @@ class CalculationRequest(BaseModel):
         "json_schema_extra": {
             "examples": [
                 {
-                    "location": {"latitude": 41.2, "longitude": -101.6},
+                    "location": {"latitude": 37.3988876, "longitude": -101.0458298},
                     "crop_id": "4",
                     "input_level": "L"
                 },
                 {
-                    "location": {"latitude": 41.2, "longitude": -101.6},
+                    "location": {"latitude": 37.3988876, "longitude": -101.0458298},
                     "crop_id": "4",
                     "input_level": "H",
                     "user_data": {
