@@ -9,6 +9,7 @@ A flexible REST API for calculating crop-specific soil quality indices and suita
 - **46+ Crops Supported**: Comprehensive crop database from wheat and maize to specialty crops
 - **7 Soil Quality Indices**: Complete soil assessment (SQ1-SQ7) plus overall rating (SR)
 - **3 Input Levels**: Low, Intermediate, and High agricultural input scenarios
+- **Comprehensive Interpretations**: Detailed interpretations of soil quality indices with constraint analysis, limiting factors, and management recommendations
 
 ## Quick Start
 
@@ -154,9 +155,109 @@ curl -X POST "http://localhost:8000/api/v1/calculate" \
     "gaez_version": "4.0",
     "processing_time_seconds": 2.345
   },
-  "message": "User plot data integrated; User site data integrated; User lab data integrated; Overall soil suitability: Good (SR=65.8)"
+  "message": "User plot data integrated; User site data integrated; User lab data integrated; Overall soil suitability: Good (SR=65.8)",
+  "interpretations": {
+    "suitability": {
+      "overall_classification": "good",
+      "suitability_class": "S1",
+      "summary": "This soil is suitable for Maize with minor limitations that can be easily managed. Primary constraint: Nutrient Availability (72.5).",
+      "primary_constraint": "Nutrient Availability: Nutrient Availability causes minor yield reduction (5-10% potential loss)",
+      "secondary_constraints": ["Nutrient Retention (78.3)", "Workability (88.0)"],
+      "input_level_note": "High input interpretation: Assessment assumes commercial farming with optimal fertilizer use..."
+    },
+    "sqi_interpretations": {
+      "SQ1": {
+        "index_name": "Nutrient Availability",
+        "score": 72.5,
+        "classification": "good",
+        "constraint_severity": "slight",
+        "description": "Good natural nutrient availability. Soil provides adequate nutrients with minor limitations.",
+        "key_factors": ["Organic carbon", "pH", "Total exchangeable bases (TEB)", "Texture"],
+        "management_options": []
+      }
+    },
+    "limiting_factors": [
+      {
+        "sqi_code": "SQ1",
+        "sqi_name": "Nutrient Availability",
+        "score": 72.5,
+        "severity": "slight",
+        "impact_description": "Nutrient Availability causes minor yield reduction (5-10% potential loss)",
+        "is_primary": true
+      }
+    ],
+    "phase_impacts": [],
+    "recommendations": [],
+    "crop_specific_notes": []
+  }
 }
 ```
+
+## Interpretation Framework
+
+The API returns comprehensive interpretations of soil quality assessment results, including:
+
+### Suitability Interpretation
+
+The `suitability` object provides:
+- **overall_classification**: Score classification (excellent, good, moderate, poor, very_poor)
+- **suitability_class**: FAO suitability class (S1, S2, S3, N)
+- **summary**: Human-readable summary of soil suitability
+- **primary_constraint**: Most limiting factor description
+- **secondary_constraints**: Other significant constraints
+- **input_level_note**: Explanation of how input level affects interpretation
+
+### Individual SQI Interpretations
+
+Each SQI (SQ1-SQ7) includes:
+- **index_name**: Full name (e.g., "Nutrient Availability")
+- **score**: Calculated score (0-100)
+- **classification**: Score classification
+- **constraint_severity**: Severity level (none, slight, moderate, severe, very_severe)
+- **description**: Detailed description of what the score means
+- **key_factors**: Soil properties affecting this index
+- **management_options**: Potential management interventions
+
+### Limiting Factors
+
+A ranked list of constraints including:
+- **sqi_code**: SQI identifier (e.g., "SQ3")
+- **sqi_name**: Full name
+- **score**: Score value
+- **severity**: Constraint severity
+- **impact_description**: How this factor affects yield
+- **is_primary**: Whether this is the most limiting factor
+
+### Management Recommendations
+
+Prioritized recommendations including:
+- **priority**: 1-5 (1 = highest)
+- **category**: Type of recommendation (e.g., "Nutrient Management")
+- **recommendation**: Specific action to take
+- **target_sqi**: Which SQI this recommendation addresses
+- **expected_improvement**: Anticipated improvement
+
+### Classification Scales
+
+#### Score Classification
+- **80-100**: Excellent
+- **60-79**: Good
+- **40-59**: Moderate
+- **20-39**: Poor
+- **0-19**: Very Poor
+
+#### FAO Suitability Classes
+- **S1**: Highly suitable (SR >= 60)
+- **S2**: Moderately suitable (40 <= SR < 60)
+- **S3**: Marginally suitable (20 <= SR < 40)
+- **N**: Not suitable (SR < 20)
+
+#### Constraint Severity
+- **None**: Score >= 80 (no limitation)
+- **Slight**: 60-79 (minor limitation)
+- **Moderate**: 40-59 (moderate limitation)
+- **Severe**: 20-39 (severe limitation)
+- **Very Severe**: < 20 (very severe limitation)
 
 ### 2. List Available Crops
 
@@ -486,6 +587,47 @@ print(f"SQ5 (Salinity/Sodicity): {sqi['SQ5']}")
 print(f"SQ6 (Lime/Gypsum): {sqi['SQ6']}")
 print(f"SQ7 (Workability): {sqi['SQ7']}")
 print(f"Overall Rating: {sqi['SR']}")
+```
+
+### Working with Interpretations
+
+```python
+import requests
+
+response = requests.post(
+    "http://localhost:8000/api/v1/calculate",
+    json={
+        "location": {"latitude": 37.3988876, "longitude": -101.0458298},
+        "crop_id": "4",
+        "input_level": "I"
+    }
+)
+
+result = response.json()
+interp = result['interpretations']
+
+# Overall suitability
+print(f"Overall: {interp['suitability']['overall_classification']}")
+print(f"FAO Class: {interp['suitability']['suitability_class']}")
+print(f"Summary: {interp['suitability']['summary']}")
+
+# Primary limiting factor
+if interp['limiting_factors']:
+    primary = interp['limiting_factors'][0]
+    print(f"\nPrimary Constraint: {primary['sqi_name']} (score: {primary['score']})")
+    print(f"Impact: {primary['impact_description']}")
+
+# Recommendations
+print("\nManagement Recommendations:")
+for rec in interp['recommendations']:
+    print(f"  {rec['priority']}. [{rec['category']}] {rec['recommendation']}")
+
+# Individual SQI interpretations
+print("\nSQI Details:")
+for code, sqi in interp['sqi_interpretations'].items():
+    print(f"  {code} ({sqi['index_name']}): {sqi['classification']} - {sqi['score']:.1f}")
+    if sqi['management_options']:
+        print(f"    Recommendations: {', '.join(sqi['management_options'][:2])}")
 ```
 
 ### List Available Crops
