@@ -162,9 +162,12 @@ class TestPrepareAEA_AOI:
             polygon = Polygon([(-100, 40), (-100, 41), (-99, 41), (-99, 40), (-100, 40)])
             aoi = gpd.GeoDataFrame({'geometry': [polygon]}, crs="EPSG:4326")
 
-            result = prepare_AEA_AOI(aoi)
+            result = prepare_AEA_AOI(aoi, res=30, native_crs="EPSG:5070")
 
-            assert result.crs.to_string() == "EPSG:5070", "Should transform to Albers Equal Area"
+            assert isinstance(result, dict), "Should return a dictionary"
+            assert 'bbox' in result, "Should have bbox"
+            assert 'width' in result, "Should have width"
+            assert 'height' in result, "Should have height"
         except ImportError:
             pytest.skip("Function not directly importable or dependencies missing")
 
@@ -178,9 +181,10 @@ class TestPrepareAEA_AOI:
                               (1100000, 2100000), (1100000, 2000000), (1000000, 2000000)])
             aoi = gpd.GeoDataFrame({'geometry': [polygon]}, crs="EPSG:5070")
 
-            result = prepare_AEA_AOI(aoi)
+            result = prepare_AEA_AOI(aoi, res=30, native_crs="EPSG:5070")
 
-            assert result.crs.to_string() == "EPSG:5070"
+            assert isinstance(result, dict), "Should return a dictionary"
+            assert 'bbox' in result, "Should have bbox"
         except ImportError:
             pytest.skip("Function not directly importable")
 

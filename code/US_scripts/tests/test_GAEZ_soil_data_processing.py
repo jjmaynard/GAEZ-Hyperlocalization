@@ -34,10 +34,12 @@ def sample_map_data():
 def sample_plot_data():
     """Create sample field plot data."""
     return pd.DataFrame({
-        'depth_top': [0, 25],
-        'depth_bottom': [25, 60],
-        'texture_field': ['Loam', 'Sandy loam'],
-        'coarse_fragments': [5, 10]
+        'texture': ['Loam', 'Sandy loam'],
+        'bottom': [25, 60],
+        'rfv_class': ['Low', 'Medium'],
+        'bedrock_depth': [200, 200],
+        'longitude': [-100.0, -100.0],
+        'latitude': [38.5, 38.5]
     })
 
 
@@ -45,11 +47,16 @@ def sample_plot_data():
 def sample_lab_data():
     """Create sample laboratory data."""
     return pd.DataFrame({
-        'depth_top': [0, 30],
-        'depth_bottom': [30, 80],
-        'ph_lab': [6.3, 6.9],
-        'om_lab': [2.8, 1.2],
-        'cec_lab': [16.0, 13.5]
+        'OC': [1.5, 0.7],
+        'pH': [6.3, 6.9],
+        'TEB': [12.5, 10.8],
+        'BS': [78.0, 80.0],
+        'ECEC': [16.0, 13.5],
+        'CECc': [70.0, 68.0],
+        'ESP': [2.0, 1.8],
+        'bottom': [30, 80],
+        'texture': ['Loam', 'Sandy loam'],
+        'bedrock_depth': [200, 200]
     })
 
 
