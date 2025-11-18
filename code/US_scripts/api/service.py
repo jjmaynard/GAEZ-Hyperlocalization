@@ -8,10 +8,33 @@ from typing import Optional, Tuple, Dict, Any
 import logging
 from datetime import datetime
 import time
+import math
 
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Point, box
+
+
+def _safe_float(value, default: float = 0.0) -> float:
+    """
+    Safely convert a value to float, handling NaN and None values.
+
+    Args:
+        value: Value to convert (can be NaN, None, or numeric)
+        default: Default value to return if value is NaN or None
+
+    Returns:
+        Float value, or default if value is NaN/None
+    """
+    if value is None:
+        return default
+    try:
+        float_val = float(value)
+        if math.isnan(float_val) or math.isinf(float_val):
+            return default
+        return float_val
+    except (TypeError, ValueError):
+        return default
 
 # Add parent directory to path to import GAEZ modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -204,14 +227,14 @@ class GAEZCalculationService:
             sqi_row = sqi_results.iloc[0]
 
             soil_quality_indices = SoilQualityIndices(
-                SQ1=float(sqi_row.get('SQ1', 0)),
-                SQ2=float(sqi_row.get('SQ2', 0)),
-                SQ3=float(sqi_row.get('SQ3', 0)),
-                SQ4=float(sqi_row.get('SQ4', 0)),
-                SQ5=float(sqi_row.get('SQ5', 0)),
-                SQ6=float(sqi_row.get('SQ6', 0)),
-                SQ7=float(sqi_row.get('SQ7', 0)),
-                SR=float(sqi_row.get('SR', 0))
+                SQ1=_safe_float(sqi_row.get('SQ1')),
+                SQ2=_safe_float(sqi_row.get('SQ2')),
+                SQ3=_safe_float(sqi_row.get('SQ3')),
+                SQ4=_safe_float(sqi_row.get('SQ4')),
+                SQ5=_safe_float(sqi_row.get('SQ5')),
+                SQ6=_safe_float(sqi_row.get('SQ6')),
+                SQ7=_safe_float(sqi_row.get('SQ7')),
+                SR=_safe_float(sqi_row.get('SR'))
             )
 
             # Step 7: Build response
@@ -528,7 +551,7 @@ class GAEZCalculationService:
 
         # Report on soil rating quality
         if len(sqi_results) > 0:
-            sr = sqi_results.iloc[0].get('SR', 0)
+            sr = _safe_float(sqi_results.iloc[0].get('SR'))
             if sr >= 80:
                 quality = "Excellent"
             elif sr >= 60:
