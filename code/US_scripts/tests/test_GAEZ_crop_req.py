@@ -237,6 +237,171 @@ class TestGetGAEZRequirementsCsv:
         captured = capsys.readouterr()
         assert "Error: File not found" in captured.out
 
+    def test_empty_csv_file(self, tmp_path, monkeypatch):
+        """Test handling of empty CSV files."""
+        import gaez_config
+
+        # Create empty CSV file
+        profile_path = tmp_path / "GAEZ_profile_req_rf.csv"
+        profile_path.write_text("")
+
+        for fname in ['text_req', 'phase_req', 'drainage_req', 'terrain_req']:
+            (tmp_path / f"GAEZ_{fname}_rf.csv").touch()
+
+        monkeypatch.setattr(gaez_config, 'profile_req_url', str(profile_path))
+        monkeypatch.setattr(gaez_config, 'texture_req_url', str(tmp_path / "GAEZ_text_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'phase_req_url', str(tmp_path / "GAEZ_phase_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'drainage_req_url', str(tmp_path / "GAEZ_drainage_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'terrain_req_url', str(tmp_path / "GAEZ_terrain_req_rf.csv"))
+
+        # Should handle empty file gracefully
+        result = GAEZ_crop_req.getGAEZ_requirements_csv(CROP_ID='4', inputLevel='L')
+        assert isinstance(result, dict)
+
+    def test_csv_with_missing_required_columns(self, tmp_path, monkeypatch, capsys):
+        """Test handling of CSV files with missing required columns."""
+        import gaez_config
+
+        # Create CSV with missing columns
+        profile_data = pd.DataFrame({
+            'CROP_ID': ['4'],
+            'input_level': [1],
+            # Missing 'SQI_code', 'score', etc.
+        })
+
+        profile_path = tmp_path / "GAEZ_profile_req_rf.csv"
+        profile_data.to_csv(profile_path, index=False)
+
+        for fname in ['text_req', 'phase_req', 'drainage_req', 'terrain_req']:
+            (tmp_path / f"GAEZ_{fname}_rf.csv").touch()
+
+        monkeypatch.setattr(gaez_config, 'profile_req_url', str(profile_path))
+        monkeypatch.setattr(gaez_config, 'texture_req_url', str(tmp_path / "GAEZ_text_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'phase_req_url', str(tmp_path / "GAEZ_phase_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'drainage_req_url', str(tmp_path / "GAEZ_drainage_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'terrain_req_url', str(tmp_path / "GAEZ_terrain_req_rf.csv"))
+
+        result = GAEZ_crop_req.getGAEZ_requirements_csv(CROP_ID='4', inputLevel='L')
+
+        # Should print error about missing columns
+        captured = capsys.readouterr()
+        assert "missing required columns" in captured.out
+
+    def test_csv_filters_no_matching_crop(self, tmp_path, monkeypatch):
+        """Test that filtering returns empty DataFrame when no crop matches."""
+        import gaez_config
+
+        # Create CSV with different crop
+        profile_data = pd.DataFrame({
+            'CROP_ID': ['5', '5'],  # Different crop ID
+            'CROP': ['Rice', 'Rice'],
+            'input_level': [1, 3],
+            'SQI_code': [1, 1],
+            'score': [80, 90],
+            'property_value': [1.0, 2.0],
+            'property': ['oc', 'oc'],
+            'unit': ['%', '%'],
+            'property_id': [1, 1],
+            'property_text': ['Organic carbon', 'Organic carbon']
+        })
+
+        profile_path = tmp_path / "GAEZ_profile_req_rf.csv"
+        profile_data.to_csv(profile_path, index=False)
+
+        for fname in ['text_req', 'phase_req', 'drainage_req', 'terrain_req']:
+            (tmp_path / f"GAEZ_{fname}_rf.csv").touch()
+
+        monkeypatch.setattr(gaez_config, 'profile_req_url', str(profile_path))
+        monkeypatch.setattr(gaez_config, 'texture_req_url', str(tmp_path / "GAEZ_text_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'phase_req_url', str(tmp_path / "GAEZ_phase_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'drainage_req_url', str(tmp_path / "GAEZ_drainage_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'terrain_req_url', str(tmp_path / "GAEZ_terrain_req_rf.csv"))
+
+        result = GAEZ_crop_req.getGAEZ_requirements_csv(CROP_ID='4', inputLevel='L')
+
+        # Should return empty DataFrame for profile
+        assert 'profile' in result
+        assert result['profile'].empty
+
+    def test_csv_with_duplicate_entries(self, tmp_path, monkeypatch):
+        """Test handling of CSV with duplicate entries."""
+        import gaez_config
+
+        # Create CSV with duplicates
+        profile_data = pd.DataFrame({
+            'CROP_ID': ['4', '4', '4', '4'],  # Duplicates
+            'CROP': ['Maize', 'Maize', 'Maize', 'Maize'],
+            'input_level': [1, 1, 3, 3],  # Duplicate combinations
+            'SQI_code': [1, 1, 1, 1],
+            'score': [80, 80, 90, 90],  # Same values
+            'property_value': [1.0, 1.0, 2.0, 2.0],
+            'property': ['oc', 'oc', 'oc', 'oc'],
+            'unit': ['%', '%', '%', '%'],
+            'property_id': [1, 1, 1, 1],
+            'property_text': ['Organic carbon', 'Organic carbon', 'Organic carbon', 'Organic carbon']
+        })
+
+        profile_path = tmp_path / "GAEZ_profile_req_rf.csv"
+        profile_data.to_csv(profile_path, index=False)
+
+        for fname in ['text_req', 'phase_req', 'drainage_req', 'terrain_req']:
+            (tmp_path / f"GAEZ_{fname}_rf.csv").touch()
+
+        monkeypatch.setattr(gaez_config, 'profile_req_url', str(profile_path))
+        monkeypatch.setattr(gaez_config, 'texture_req_url', str(tmp_path / "GAEZ_text_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'phase_req_url', str(tmp_path / "GAEZ_phase_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'drainage_req_url', str(tmp_path / "GAEZ_drainage_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'terrain_req_url', str(tmp_path / "GAEZ_terrain_req_rf.csv"))
+
+        result = GAEZ_crop_req.getGAEZ_requirements_csv(CROP_ID='4', inputLevel='L')
+
+        # Should include all rows (duplicates not removed by default)
+        assert 'profile' in result
+        assert len(result['profile']) == 4
+
+    def test_tuple_path_handling(self, tmp_path, monkeypatch):
+        """Test handling of tuple paths (code has special handling for this)."""
+        import gaez_config
+
+        # Create valid CSV
+        profile_data = pd.DataFrame({
+            'CROP_ID': ['4'],
+            'CROP': ['Maize'],
+            'input_level': [1],
+            'SQI_code': [1],
+            'score': [80],
+            'property_value': [1.0],
+            'property': ['oc'],
+            'unit': ['%'],
+            'property_id': [1],
+            'property_text': ['Organic carbon']
+        })
+
+        profile_path = tmp_path / "GAEZ_profile_req_rf.csv"
+        profile_data.to_csv(profile_path, index=False)
+
+        for fname in ['text_req', 'phase_req', 'drainage_req', 'terrain_req']:
+            (tmp_path / f"GAEZ_{fname}_rf.csv").touch()
+
+        # Set path as tuple (this is what the code checks for on line 292-293)
+        monkeypatch.setattr(gaez_config, 'profile_req_url', (str(profile_path), 'extra'))
+        monkeypatch.setattr(gaez_config, 'texture_req_url', str(tmp_path / "GAEZ_text_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'phase_req_url', str(tmp_path / "GAEZ_phase_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'drainage_req_url', str(tmp_path / "GAEZ_drainage_req_rf.csv"))
+        monkeypatch.setattr(gaez_config, 'terrain_req_url', str(tmp_path / "GAEZ_terrain_req_rf.csv"))
+
+        # Test getGAEZ_requirements_source which has tuple handling
+        result = GAEZ_crop_req.getGAEZ_requirements_source(
+            CROP_ID='4',
+            inputLevel='L',
+            source='csv',
+            requirement_type='profile'
+        )
+
+        # Should extract first element of tuple and use it
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) > 0
+
 
 class TestGetGAEZRequirementsSource:
     """Tests for getGAEZ_requirements_source unified interface."""
