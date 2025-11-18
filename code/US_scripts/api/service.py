@@ -54,8 +54,10 @@ from .models import (
     CalculationMetadata,
     Location,
     CropListResponse,
-    CropListItem
+    CropListItem,
+    InterpretationResponse
 )
+from .interpretation import generate_interpretation
 
 logger = logging.getLogger(__name__)
 
@@ -238,7 +240,29 @@ class GAEZCalculationService:
                 SR=_safe_float(sqi_row.get('SR'))
             )
 
-            # Step 7: Build response
+            # Step 7: Generate interpretations
+            logger.info("Generating soil quality interpretations")
+            scores_dict = {
+                'SQ1': soil_quality_indices.SQ1,
+                'SQ2': soil_quality_indices.SQ2,
+                'SQ3': soil_quality_indices.SQ3,
+                'SQ4': soil_quality_indices.SQ4,
+                'SQ5': soil_quality_indices.SQ5,
+                'SQ6': soil_quality_indices.SQ6,
+                'SQ7': soil_quality_indices.SQ7,
+                'SR': soil_quality_indices.SR
+            }
+
+            crop_name = CROP_NAMES.get(request.crop_id, f"Crop {request.crop_id}")
+            interpretations = generate_interpretation(
+                scores=scores_dict,
+                input_level=request.input_level.value,
+                crop_id=request.crop_id,
+                crop_name=crop_name,
+                soil_data=working_data
+            )
+
+            # Step 8: Build response
             processing_time = time.time() - start_time
 
             crop_info = CropInfo(
@@ -261,6 +285,7 @@ class GAEZCalculationService:
                 location=request.location,
                 crop_info=crop_info,
                 soil_quality_indices=soil_quality_indices,
+                interpretations=interpretations,
                 data_sources=DataSources(**data_sources_info),
                 metadata=metadata,
                 message=self._generate_result_message(sqi_results, data_sources_info)

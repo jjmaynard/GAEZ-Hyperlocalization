@@ -279,12 +279,111 @@ class CalculationMetadata(BaseModel):
     processing_time_seconds: float = Field(..., description="Calculation processing time")
 
 
+# =============================================================================
+# Interpretation Framework Models
+# =============================================================================
+
+class SQIClassification(str, Enum):
+    """Classification levels for soil quality indices."""
+    EXCELLENT = "excellent"
+    GOOD = "good"
+    MODERATE = "moderate"
+    POOR = "poor"
+    VERY_POOR = "very_poor"
+
+
+class ConstraintSeverity(str, Enum):
+    """Severity levels for soil constraints."""
+    NONE = "none"
+    SLIGHT = "slight"
+    MODERATE = "moderate"
+    SEVERE = "severe"
+    VERY_SEVERE = "very_severe"
+
+
+class SQIInterpretation(BaseModel):
+    """Interpretation for an individual Soil Quality Index."""
+    index_name: str = Field(..., description="Full name of the SQI (e.g., 'Nutrient Availability')")
+    score: float = Field(..., description="Calculated SQI score (0-100)")
+    classification: SQIClassification = Field(..., description="Score classification")
+    constraint_severity: ConstraintSeverity = Field(..., description="Severity of limitation")
+    description: str = Field(..., description="Human-readable description of what this score means")
+    key_factors: List[str] = Field(default_factory=list, description="Key soil properties affecting this index")
+    management_options: List[str] = Field(default_factory=list, description="Potential management interventions")
+
+
+class LimitingFactor(BaseModel):
+    """Details about a specific limiting factor for soil suitability."""
+    sqi_code: str = Field(..., description="SQI code (e.g., 'SQ3')")
+    sqi_name: str = Field(..., description="Full name of the limiting SQI")
+    score: float = Field(..., description="Score of the limiting factor")
+    severity: ConstraintSeverity = Field(..., description="Severity of limitation")
+    impact_description: str = Field(..., description="How this factor limits suitability")
+    is_primary: bool = Field(False, description="Whether this is the most limiting factor")
+
+
+class PhaseInterpretation(BaseModel):
+    """Interpretation of soil phase impacts on suitability."""
+    phase_name: str = Field(..., description="Name of the soil phase")
+    is_present: bool = Field(..., description="Whether this phase is present")
+    affected_indices: List[str] = Field(default_factory=list, description="SQI codes affected by this phase")
+    impact_description: str = Field(..., description="Description of how this phase affects soil suitability")
+
+
+class ManagementRecommendation(BaseModel):
+    """Management recommendation for improving soil suitability."""
+    priority: int = Field(..., ge=1, le=5, description="Priority level (1=highest)")
+    category: str = Field(..., description="Category of recommendation (e.g., 'Nutrient Management')")
+    recommendation: str = Field(..., description="Specific recommendation")
+    target_sqi: Optional[str] = Field(None, description="SQI code this recommendation targets")
+    expected_improvement: Optional[str] = Field(None, description="Expected improvement from this action")
+
+
+class SoilSuitabilityInterpretation(BaseModel):
+    """Overall interpretation of soil suitability for the crop."""
+    overall_classification: SQIClassification = Field(..., description="Overall suitability classification")
+    suitability_class: str = Field(..., description="FAO suitability class (S1, S2, S3, N)")
+    summary: str = Field(..., description="Summary statement of soil suitability")
+    primary_constraint: Optional[str] = Field(None, description="Most limiting factor description")
+    secondary_constraints: List[str] = Field(default_factory=list, description="Other significant constraints")
+    input_level_note: str = Field(..., description="Note about how input level affects interpretation")
+
+
+class InterpretationResponse(BaseModel):
+    """Complete interpretation of soil quality assessment results."""
+    suitability: SoilSuitabilityInterpretation = Field(..., description="Overall suitability interpretation")
+    sqi_interpretations: Dict[str, SQIInterpretation] = Field(
+        ...,
+        description="Detailed interpretation for each SQI (keys: SQ1-SQ7)"
+    )
+    limiting_factors: List[LimitingFactor] = Field(
+        default_factory=list,
+        description="Ranked list of limiting factors"
+    )
+    phase_impacts: List[PhaseInterpretation] = Field(
+        default_factory=list,
+        description="Impacts of identified soil phases"
+    )
+    recommendations: List[ManagementRecommendation] = Field(
+        default_factory=list,
+        description="Prioritized management recommendations"
+    )
+    crop_specific_notes: List[str] = Field(
+        default_factory=list,
+        description="Notes specific to the selected crop"
+    )
+
+
 class CalculationResponse(BaseModel):
     """Response containing soil quality indices and metadata."""
     status: Literal["success", "error"] = Field(..., description="Calculation status")
     location: Location = Field(..., description="Location coordinates")
     crop_info: CropInfo = Field(..., description="Crop calculation parameters")
     soil_quality_indices: SoilQualityIndices = Field(..., description="Calculated SQI scores")
+    interpretations: Optional[InterpretationResponse] = Field(
+        None,
+        description="Detailed interpretations of soil quality indices and suitability ratings"
+    )
     data_sources: DataSources = Field(..., description="Data sources used")
     metadata: CalculationMetadata = Field(..., description="Calculation metadata")
     message: Optional[str] = Field(None, description="Additional information or warnings")
