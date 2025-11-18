@@ -7,6 +7,179 @@ import rasterio
 # import local functions
 import GAEZ_SQI_functions
 import gaez_config
+from GAEZ_SSURGO_data import gettt, getTXT_id, getTextGroup
+
+
+def getSand(texture_class):
+    """
+    Extract or estimate sand percentage from texture class.
+
+    Args:
+        texture_class: Texture class name or None
+
+    Returns:
+        float: Estimated sand percentage
+    """
+    if texture_class is None or pd.isna(texture_class):
+        return 33.0  # Default middle value
+
+    texture_str = str(texture_class).lower().strip()
+
+    # Mapping of texture classes to typical sand percentages
+    texture_sand_map = {
+        'sand': 92, 's': 92,
+        'loamy sand': 82, 'ls': 82,
+        'sandy loam': 65, 'sl': 65,
+        'sandy clay loam': 60, 'scl': 60,
+        'loam': 40, 'l': 40,
+        'silt loam': 20, 'sil': 20,
+        'silt': 8, 'si': 8,
+        'clay loam': 32, 'cl': 32,
+        'silty clay loam': 10, 'sicl': 10,
+        'sandy clay': 52, 'sc': 52,
+        'silty clay': 7, 'sic': 7,
+        'clay': 22, 'c': 22
+    }
+
+    return texture_sand_map.get(texture_str, 33.0)
+
+
+def getClay(texture_class):
+    """
+    Extract or estimate clay percentage from texture class.
+
+    Args:
+        texture_class: Texture class name or None
+
+    Returns:
+        float: Estimated clay percentage
+    """
+    if texture_class is None or pd.isna(texture_class):
+        return 33.0  # Default middle value
+
+    texture_str = str(texture_class).lower().strip()
+
+    # Mapping of texture classes to typical clay percentages
+    texture_clay_map = {
+        'sand': 3, 's': 3,
+        'loamy sand': 7, 'ls': 7,
+        'sandy loam': 10, 'sl': 10,
+        'sandy clay loam': 27, 'scl': 27,
+        'loam': 18, 'l': 18,
+        'silt loam': 15, 'sil': 15,
+        'silt': 10, 'si': 10,
+        'clay loam': 34, 'cl': 34,
+        'silty clay loam': 34, 'sicl': 34,
+        'sandy clay': 42, 'sc': 42,
+        'silty clay': 47, 'sic': 47,
+        'clay': 60, 'c': 60
+    }
+
+    return texture_clay_map.get(texture_str, 33.0)
+
+
+def getCF_fromClass(rfv_class):
+    """
+    Convert rock fragment volume class to numeric value.
+
+    Args:
+        rfv_class: Rock fragment volume class or None
+
+    Returns:
+        float: Estimated rock fragment volume percentage
+    """
+    if rfv_class is None or pd.isna(rfv_class):
+        return 0.0
+
+    rfv_str = str(rfv_class).lower().strip()
+
+    # Mapping of RFV classes to percentages
+    rfv_map = {
+        'none': 0, '0': 0,
+        'very low': 3, '1': 3,
+        'low': 8, '2': 8,
+        'moderate': 20, '3': 20,
+        'high': 40, '4': 40,
+        'very high': 60, '5': 60
+    }
+
+    # Try to parse as number first
+    try:
+        return float(rfv_str)
+    except (ValueError, TypeError):
+        return rfv_map.get(rfv_str, 0.0)
+
+
+def getTextGroup_id(texture_class):
+    """
+    Map texture class to texture group ID (Coarse=1, Medium=2, Fine=3).
+
+    Args:
+        texture_class: Texture class name
+
+    Returns:
+        int: Texture group ID (1=Coarse, 2=Medium, 3=Fine)
+    """
+    if texture_class is None or pd.isna(texture_class):
+        return np.nan
+
+    texture_str = str(texture_class).lower().strip()
+
+    # Use getTextGroup to get the group letter
+    group_letter = getTextGroup(texture_str)
+
+    # Map letter to ID
+    group_id_map = {
+        'C': '1',  # Coarse
+        'M': '2',  # Medium
+        'F': '3'   # Fine
+    }
+
+    return group_id_map.get(group_letter, np.nan)
+
+
+def agg_data_layer_SQI(data, bottom, depth=False):
+    """
+    Aggregate soil property data over standard SQI depth layers.
+
+    Args:
+        data: Series of property values by 1cm depth increments
+        bottom: Bottom depth of the profile
+        depth: If True, also return depth boundaries
+
+    Returns:
+        If depth=True: (aggregated_data, depth_boundaries) as Series
+        If depth=False: aggregated_data as Series
+    """
+    # Standard SQI depth layers (cm): 0-20, 20-50, 50-100
+    layer_boundaries = [0, 20, 50, min(100, bottom)]
+
+    # Ensure data is a Series with numeric index
+    if not isinstance(data, pd.Series):
+        data = pd.Series(data)
+
+    aggregated_values = []
+    depth_bounds = []
+
+    for i in range(len(layer_boundaries) - 1):
+        top = layer_boundaries[i]
+        bot = layer_boundaries[i + 1]
+
+        # Select data within this layer
+        layer_data = data.iloc[top:bot] if len(data) > top else pd.Series([])
+
+        # Calculate mean for this layer
+        if len(layer_data) > 0:
+            aggregated_values.append(layer_data.mean())
+        else:
+            aggregated_values.append(np.nan)
+
+        depth_bounds.append(bot)
+
+    if depth:
+        return pd.Series(aggregated_values), pd.Series(depth_bounds)
+    else:
+        return pd.Series(aggregated_values)
 
 
 def process_plot_data(plot_data, map_data):

@@ -282,10 +282,10 @@ def classify_gaez_v4_phases(df):
                         (str(row["pondfreqcl"]).lower() == "occasional" and 
                          str(row["ponddurcl"]).lower() == "very long (more than 30 days)"))),
          PHASE_IDS['inundic']),
-        (lambda row: ("salic" in str(row["reskind"]).lower()) or (row["ec"] >= 4), PHASE_IDS['saline']),
-        (lambda row: ("salic" in str(row["reskind"]).lower()) or (row["ec"] >= 15) or (
-                        (row["ec"] >= 4) and (row["ph"] >= 8.3)), PHASE_IDS['salic']),
-        (lambda row: ("natric" in str(row["reskind"]).lower()) or (row["esp"] >= 6) or (row["sar"] >= 13), PHASE_IDS['sodic']),
+        (lambda row: ("salic" in str(row.get("reskind", "")).lower()) or (row.get("ec", row.get("ec_r", 0)) >= 4), PHASE_IDS['saline']),
+        (lambda row: ("salic" in str(row.get("reskind", "")).lower()) or (row.get("ec", row.get("ec_r", 0)) >= 15) or (
+                        (row.get("ec", row.get("ec_r", 0)) >= 4) and (row.get("ph", row.get("ph1to1h2o_r", 0)) >= 8.3)), PHASE_IDS['salic']),
+        (lambda row: ("natric" in str(row.get("reskind", "")).lower()) or (row.get("esp", row.get("esp_r", 0)) >= 6) or (row.get("sar", row.get("sar_r", 0)) >= 13), PHASE_IDS['sodic']),
         (lambda row: ("excessively drained" in str(row["drainagecl"]).lower() or 
                       "somewhat excessively drained" in str(row["drainagecl"]).lower()), PHASE_IDS['excessively_drained'])
     ]

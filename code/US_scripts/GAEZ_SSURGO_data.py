@@ -281,7 +281,9 @@ def classify_pscl(texture_or_row, clay=None, sand=None):
     # Handle texture string call
     elif isinstance(texture_or_row, str):
         texture = texture_or_row.lower().strip()
-        # If clay and sand not provided, classify purely on texture name
+        # Track if clay and sand were provided
+        has_values = (clay is not None) or (sand is not None)
+        # If clay and sand not provided, set to 0
         if clay is None:
             clay = 0
         if sand is None:
@@ -297,33 +299,44 @@ def classify_pscl(texture_or_row, clay=None, sand=None):
     ]
     fine_textures = ['clay', 'silty clay', 'sandy clay', 'clay loam', 'silty clay loam']
 
-    # --- Primary Rules ---
+    # If no numeric values provided, classify purely by texture group
+    if not has_values:
+        if texture in fine_textures:
+            return '3'
+        elif texture in medium_textures:
+            return '2'
+        elif texture in coarse_textures:
+            return '1'
+        else:
+            return 'unknown'
+
+    # --- Primary Rules with numeric thresholds ---
     if texture in fine_textures:
         if clay > 35:
-            return 'f'
+            return '3'
         # Fallback: maybe medium?
         elif clay < 35 and sand < 65 or (sand <= 82 and clay >= 18):
-            return 'm'
+            return '2'
         else:
-            return 'f'  # Default for fine textures
+            return '3'  # Default for fine textures
 
     if texture in medium_textures:
         if clay < 35 and sand < 65 or (sand <= 82 and clay >= 18):
-            return 'm'
+            return '2'
         # Fallback: maybe fine?
         elif clay > 35:
-            return 'f'
+            return '3'
         else:
-            return 'm'  # Default for medium textures
+            return '2'  # Default for medium textures
 
     if texture in coarse_textures:
         if clay < 18 and sand > 65:
-            return 'c'
+            return '1'
         # Fallback: maybe medium?
         elif clay < 35 and sand < 65 or (sand <= 82 and clay >= 18):
-            return 'm'
+            return '2'
         else:
-            return 'c'  # Default for coarse textures
+            return '1'  # Default for coarse textures
 
     return 'unknown'
 

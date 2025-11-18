@@ -233,7 +233,7 @@ def calculate_SQ1(data, profile_req, texture_req, inputLevel, wts):
         
         # texture score
         text_class_id = str(layer['texture_class_id'])
-        txt_score = texture_req.query(f'SQI_code == 1 & text_class_id == {text_class_id}')['score'].iloc[0]
+        txt_score = texture_req.query(f'SQI_code == 1 & text_class_id == "{text_class_id}"')['score'].iloc[0]
 
         # For topsoil only
         if s == 0:
@@ -285,7 +285,7 @@ def calculate_SQ2(data, profile_req, texture_req, inputLevel, wts):
         # Texture score only for high input level
         if inputLevel == 'H':
             text_class_id = str(layer['texture_class_id'])
-            txt_score = texture_req.query(f'SQI_code == 2 & text_class_id == {text_class_id}')['score'].iloc[0]
+            txt_score = texture_req.query(f'SQI_code == 2 & text_class_id == "{text_class_id}"')['score'].iloc[0]
         else:
             txt_score = None
 
@@ -351,6 +351,9 @@ def calculate_SQ3(data, profile_req, texture_req, phase_req, wts):
 
     # --- Profile-level properties ---
     rd = data['rd'].iloc[0]
+    # Fill NaN with 200 (no restriction)
+    if pd.isna(rd):
+        rd = 200
     sq3_rd_req = profile_req.query('SQI_code == 3 & property == "rd"').sort_values(by='property_value', ascending=False).reset_index(drop=True)
     sq3_rd_score = constraint_curve(rd, sq3_rd_req[['score', 'property_value']])
 
@@ -402,6 +405,9 @@ def calculate_SQ3(data, profile_req, texture_req, phase_req, wts):
 
         # Coarse fragments
         cf = layer['fragvol']
+        # Fill NaN with 0 (no fragments)
+        if pd.isna(cf):
+            cf = 0
         sq3_cf_req = profile_req.query('SQI_code == 3 & property == "cf"').sort_values(by='property_value', ascending=False).reset_index(drop=True)
         sq3_cf_score = constraint_curve(cf, sq3_cf_req[['score', 'property_value']])
 
@@ -642,6 +648,9 @@ def calculate_SQ7(data, phase_req, profile_req, texture_req, wts):
 
     # --- Profile-level scores ---
     rd = data['rd'].iloc[0]
+    # Fill NaN with 200 (no restriction)
+    if pd.isna(rd):
+        rd = 200
     rd_req = profile_req.query('SQI_code == 7 & property == "rd"').sort_values(by='property_value', ascending=False).reset_index(drop=True)
     rd_score = constraint_curve(rd, rd_req[['score', 'property_value']])
 
@@ -681,6 +690,9 @@ def calculate_SQ7(data, phase_req, profile_req, texture_req, wts):
         db_score = constraint_curve(db_dc, db_req[['score', 'property_value']])
 
         cf = layer['fragvol']
+        # Fill NaN with 0 (no fragments)
+        if pd.isna(cf):
+            cf = 0
         cf_req = profile_req.query('SQI_code == 7 & property == "cf"').sort_values(by='property_value', ascending=False).reset_index(drop=True)
         cf_score = constraint_curve(cf, cf_req[['score', 'property_value']])
 
