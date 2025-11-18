@@ -191,6 +191,7 @@ class GAEZCalculationService:
             data_sources_info = {
                 'ssurgo_used': True,
                 'ssurgo_component': mukey_info.get('component_name'),
+                'ssurgo_cokey': mukey_info.get('cokey'),
                 'ssurgo_map_unit': mukey_info.get('mukey'),
                 'user_plot_data_used': False,
                 'user_site_data_used': False,
@@ -332,6 +333,7 @@ class GAEZCalculationService:
             # Get info about the dominant component
             mukey_info = {
                 'mukey': str(mukeys[0]) if mukeys else None,
+                'cokey': str(ssurgo_data.iloc[0].get('cokey', 'Unknown')) if len(ssurgo_data) > 0 else None,
                 'component_name': ssurgo_data.iloc[0].get('compname', 'Unknown') if len(ssurgo_data) > 0 else None,
                 'total_components': len(ssurgo_data['cokey'].unique()) if 'cokey' in ssurgo_data.columns else 0
             }
