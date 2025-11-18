@@ -138,7 +138,7 @@ def mukey_wcs(aoi, db='gssurgo', res=30, quiet=False):
     ymax2 = ymin + res * height_px
     
     base_url = "http://casoilresource.lawr.ucdavis.edu/cgi-bin/mapserv?"
-    service_url = "map=/soilmap2/website/wcs/mukey.map&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage"
+    service_url = "map=/data1/website/wcs/mukey.map&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage"
     
     # Construct the WCS URL
     url = (f"{base_url}{service_url}&COVERAGEID={var_spec['dsn']}"
