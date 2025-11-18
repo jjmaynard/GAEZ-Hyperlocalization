@@ -523,13 +523,12 @@ class GAEZCalculationService:
             logger.info(f"Using user-specified depth weight type: {requested_type}")
             return requested_type
 
-        # Get default from GAEZ lookup
+        # Get default from GAEZ lookup using the proper function
         try:
-            from GAEZ_SQI_functions import GAEZ_DEPTH_WEIGHT_LOOKUP
-            default_type = GAEZ_DEPTH_WEIGHT_LOOKUP.get(crop_id, 3)  # Default to deep (3)
+            default_type = GAEZ_SQI_functions.get_depth_weight_type(crop_id)
             logger.info(f"Using default depth weight type for crop {crop_id}: {default_type}")
             return default_type
-        except Exception:
+        except KeyError:
             logger.warning(f"Could not find depth weight for crop {crop_id}, using default (3)")
             return 3
 
@@ -573,14 +572,12 @@ class GAEZCalculationService:
         Returns:
             CropListResponse with crop information
         """
-        try:
-            from GAEZ_SQI_functions import GAEZ_DEPTH_WEIGHT_LOOKUP
-        except Exception:
-            GAEZ_DEPTH_WEIGHT_LOOKUP = {}
-
         crops = []
         for crop_id, crop_name in sorted(CROP_NAMES.items()):
-            default_depth = GAEZ_DEPTH_WEIGHT_LOOKUP.get(crop_id, 3)
+            try:
+                default_depth = GAEZ_SQI_functions.get_depth_weight_type(crop_id)
+            except KeyError:
+                default_depth = 3
             crops.append(CropListItem(
                 crop_id=crop_id,
                 crop_name=crop_name,
