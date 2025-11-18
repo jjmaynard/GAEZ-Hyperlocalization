@@ -49,8 +49,8 @@ curl -X POST "http://localhost:8000/api/v1/calculate" \
   -H "Content-Type: application/json" \
   -d '{
     "location": {
-      "latitude": 41.2042,
-      "longitude": -101.6353
+      "latitude": 37.3988876,
+      "longitude": -101.0458298
     },
     "crop_id": "4",
     "input_level": "L"
@@ -64,8 +64,8 @@ curl -X POST "http://localhost:8000/api/v1/calculate" \
   -H "Content-Type: application/json" \
   -d '{
     "location": {
-      "latitude": 41.2042,
-      "longitude": -101.6353
+      "latitude": 37.3988876,
+      "longitude": -101.0458298
     },
     "crop_id": "4",
     "input_level": "H",
@@ -207,8 +207,8 @@ curl "http://localhost:8000/health"
 
 ```json
 {
-  "latitude": 41.2042,   // -90 to 90
-  "longitude": -101.6353 // -180 to 180
+  "latitude": 37.3988876,   // -90 to 90
+  "longitude": -101.0458298 // -180 to 180
 }
 ```
 
@@ -431,7 +431,7 @@ import requests
 response = requests.post(
     "http://localhost:8000/api/v1/calculate",
     json={
-        "location": {"latitude": 41.2042, "longitude": -101.6353},
+        "location": {"latitude": 37.3988876, "longitude": -101.0458298},
         "crop_id": "4",  # Maize
         "input_level": "L"
     }
@@ -450,7 +450,7 @@ import requests
 response = requests.post(
     "http://localhost:8000/api/v1/calculate",
     json={
-        "location": {"latitude": 41.2042, "longitude": -101.6353},
+        "location": {"latitude": 37.3988876, "longitude": -101.0458298},
         "crop_id": "4",
         "input_level": "H",
         "user_data": {
@@ -531,7 +531,7 @@ try:
     response = requests.post(
         "http://localhost:8000/api/v1/calculate",
         json={
-            "location": {"latitude": 41.2042, "longitude": -101.6353},
+            "location": {"latitude": 37.3988876, "longitude": -101.0458298},
             "crop_id": "4",
             "input_level": "L"
         }
