@@ -392,6 +392,7 @@ def process_site_data(site_data, map_data):
         # Retrieve slope data from a DEM file (for example, using OpenLandMap's 250m slope dataset)
         olm_250_slope = "/vsicurl/https://s3.eu-central-1.wasabisys.com/openlandmap/layers250m/dtm_slope_merit.dem_m_250m_s0..0cm_2017_v1.0.tif"
         coords = [(longitude, latitude)]
+        slope = None  # Initialize slope with default value
         with rasterio.open(olm_250_slope) as ds:
             for val in rasterio.sample.sample_gen(ds, coords):
                 slope = val[0]  # Assume the sample returns an array; extract the first element
