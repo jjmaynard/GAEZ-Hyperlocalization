@@ -368,6 +368,7 @@ def ssurgo_gaez_data(mukey_list):
     SELECT
         comp.mukey,
         comp.cokey,
+        comp.compname,
         ch.chkey,
         ch.hzname,
         ch.hzdept_r,
