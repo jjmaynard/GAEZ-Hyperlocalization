@@ -233,7 +233,8 @@ def calculate_SQ1(data, profile_req, texture_req, inputLevel, wts):
         
         # texture score
         text_class_id = str(layer['texture_class_id'])
-        txt_score = texture_req.query(f'SQI_code == 1 & text_class_id == "{text_class_id}"')['score'].iloc[0]
+        txt_req = texture_req.query(f'SQI_code == 1 & text_class_id == {text_class_id}').reset_index(drop=True)
+        txt_score = txt_req['score'].iloc[0] if not txt_req.empty else 100
 
         # For topsoil only
         if s == 0:
@@ -285,7 +286,8 @@ def calculate_SQ2(data, profile_req, texture_req, inputLevel, wts):
         # Texture score only for high input level
         if inputLevel == 'H':
             text_class_id = str(layer['texture_class_id'])
-            txt_score = texture_req.query(f'SQI_code == 2 & text_class_id == "{text_class_id}"')['score'].iloc[0]
+            txt_req = texture_req.query(f'SQI_code == 2 & text_class_id == {text_class_id}').reset_index(drop=True)
+            txt_score = txt_req['score'].iloc[0] if not txt_req.empty else 100
         else:
             txt_score = None
 
