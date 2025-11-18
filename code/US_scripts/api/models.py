@@ -254,6 +254,7 @@ class DataSources(BaseModel):
     """Information about data sources used in calculation."""
     ssurgo_used: bool = Field(..., description="Whether SSURGO data was used")
     ssurgo_component: Optional[str] = Field(None, description="SSURGO component name")
+    ssurgo_cokey: Optional[str] = Field(None, description="SSURGO component key")
     ssurgo_map_unit: Optional[str] = Field(None, description="SSURGO map unit key")
     user_plot_data_used: bool = Field(False, description="Whether user plot data was integrated")
     user_site_data_used: bool = Field(False, description="Whether user site data was integrated")
