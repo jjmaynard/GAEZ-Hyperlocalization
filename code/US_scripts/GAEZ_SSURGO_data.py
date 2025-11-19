@@ -369,6 +369,7 @@ def ssurgo_gaez_data(mukey_list):
         comp.mukey,
         comp.cokey,
         comp.compname,
+        comp.comppct_r,
         ch.chkey,
         ch.hzname,
         ch.hzdept_r,
@@ -421,7 +422,7 @@ def ssurgo_gaez_data(mukey_list):
     LEFT JOIN COTAXFMMIN cotax
          ON comp.cokey = cotax.cokey
     LEFT JOIN (
-         SELECT 
+         SELECT
               cokey,
               MAX(monthseq) AS max_month,
               MAX(pondfreqcl) AS pondfreqcl,
@@ -435,7 +436,7 @@ def ssurgo_gaez_data(mukey_list):
     LEFT JOIN MUAGGATT muagg
          ON comp.mukey = muagg.mukey
     WHERE comp.mukey IN ({mukey_str})
-    ORDER BY comp.mukey, comp.cokey, ch.hzdept_r;
+    ORDER BY comp.mukey, comp.comppct_r DESC, comp.cokey, ch.hzdept_r;
     """
     
     # Clean the query by removing extra whitespace/newlines
@@ -467,7 +468,7 @@ def ssurgo_gaez_data(mukey_list):
         cols_to_convert = [
             "hzdept_r", "hzdepb_r", "sand", "silt", "clay", "pi", "lep",
             "ec", "caco3", "om", "db_measured", "gypsum", "sar", "cecs",
-            "ecec", "teb", "ph", "wtdepannmin", "rd"
+            "ecec", "teb", "ph", "wtdepannmin", "rd", "comppct_r"
         ]
 
         # Bulk density lookup table (g/cm³) based on Saxton and Rawls (2006) pedotransfer equations using soil texture and 1% OM

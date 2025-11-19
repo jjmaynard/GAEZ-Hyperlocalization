@@ -194,7 +194,9 @@ class GAEZCalculationService:
                 'ssurgo_used': True,
                 'ssurgo_component': mukey_info.get('component_name'),
                 'ssurgo_cokey': mukey_info.get('cokey'),
+                'ssurgo_component_pct': mukey_info.get('component_pct'),
                 'ssurgo_map_unit': mukey_info.get('mukey'),
+                'ssurgo_total_components': mukey_info.get('total_components'),
                 'user_plot_data_used': False,
                 'user_site_data_used': False,
                 'user_lab_data_used': False,
@@ -355,15 +357,27 @@ class GAEZCalculationService:
             if ssurgo_data is None or len(ssurgo_data) == 0:
                 raise SSURGODataError("No component data available for map units")
 
+            # Get total components before filtering
+            total_components = len(ssurgo_data['cokey'].unique()) if 'cokey' in ssurgo_data.columns else 0
+
+            # Filter to dominant component (highest comppct_r)
+            # Data is already ordered by comppct_r DESC from SQL query
+            if 'cokey' in ssurgo_data.columns and len(ssurgo_data) > 0:
+                dominant_cokey = ssurgo_data.iloc[0]['cokey']
+                dominant_comppct = ssurgo_data.iloc[0].get('comppct_r', 'Unknown')
+                ssurgo_data = ssurgo_data[ssurgo_data['cokey'] == dominant_cokey].copy()
+                logger.info(f"Selected dominant component (cokey={dominant_cokey}, comppct_r={dominant_comppct}%)")
+
             # Get info about the dominant component
             mukey_info = {
                 'mukey': str(mukeys[0]) if mukeys else None,
                 'cokey': str(ssurgo_data.iloc[0].get('cokey', 'Unknown')) if len(ssurgo_data) > 0 else None,
                 'component_name': ssurgo_data.iloc[0].get('compname', 'Unknown') if len(ssurgo_data) > 0 else None,
-                'total_components': len(ssurgo_data['cokey'].unique()) if 'cokey' in ssurgo_data.columns else 0
+                'component_pct': ssurgo_data.iloc[0].get('comppct_r', None) if len(ssurgo_data) > 0 else None,
+                'total_components': total_components
             }
 
-            logger.info(f"Retrieved {len(ssurgo_data)} horizons from {mukey_info['total_components']} component(s)")
+            logger.info(f"Retrieved {len(ssurgo_data)} horizons from dominant component (of {mukey_info['total_components']} total)")
 
             return ssurgo_data, mukey_info
 
