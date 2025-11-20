@@ -2,9 +2,9 @@
 FAO GAEZ SQ Detailed Descriptions and Crop-Specific Information.
 
 This module provides comprehensive interpretation data derived from FAO GAEZ v4
-methodology for Soil Quality Indices SQ1-SQ6.
+methodology for Soil Quality Indices SQ1-SQ7.
 
-Based on FAO GAEZ description files: SQ1-SQ6_Description.py
+Based on FAO GAEZ description files: SQ1-SQ7_Description.py
 """
 
 from typing import Dict, List, Tuple
@@ -385,6 +385,76 @@ SQ_RATING_DESCRIPTIONS = {
             ],
             'implications': 'Essentially unsuitable for conventional agriculture. Only most adapted species survive. No economic crop production. May require complete soil removal/replacement.'
         }
+    },
+    'SQ7': {  # Workability/Field Management Constraints
+        'very_high': {
+            'range': (80, 100),
+            'title': 'Excellent Workability',
+            'characteristics': [
+                'Loamy to sandy loam texture',
+                'Well-drained with adequate working days (>200/year)',
+                'Level to gently sloping (<5%)',
+                'Stone-free or few stones',
+                'No rock outcrops',
+                'Friable consistence, good structure',
+                'Wide working moisture range'
+            ],
+            'implications': 'Flexible operation scheduling. Timeliness achievable. Low operating costs. All equipment suitable. All crops suitable. Minimal weather dependence. Long working windows.'
+        },
+        'high': {
+            'range': (60, 79),
+            'title': 'Good Workability',
+            'characteristics': [
+                'Sandy loam to clay loam texture',
+                'Well to moderately well-drained (150-200 working days/year)',
+                'Level to sloping (5-8%)',
+                'Few to some stones',
+                'Occasional rock outcrops',
+                'Generally friable, moderate structure',
+                'Adequate working moisture range'
+            ],
+            'implications': 'Generally flexible scheduling. Timeliness usually achievable. Moderate operating costs. Most equipment suitable. Most crops suitable. Some weather dependence.'
+        },
+        'medium': {
+            'range': (40, 59),
+            'title': 'Moderate Workability',
+            'characteristics': [
+                'Clay loam to clay texture, OR',
+                'Moderately steep slopes (8-15%), OR',
+                'Moderately stony (3-15% surface cover), OR',
+                'Somewhat poorly drained (75-150 working days/year), OR',
+                'Some rock outcrops (2-10%)',
+                'Narrow working moisture range (heavy soils)'
+            ],
+            'implications': 'Careful operation timing essential. Timeliness challenging. Higher operating costs. Equipment limitations present. Crop selection considerations. Erosion control essential on slopes. More intensive management needed.'
+        },
+        'low': {
+            'range': (20, 39),
+            'title': 'Poor Workability',
+            'characteristics': [
+                'Heavy clay texture, OR',
+                'Steep slopes (15-30%), OR',
+                'Very stony (15-50% surface cover), OR',
+                'Poorly drained (30-75 working days/year), OR',
+                'Common rock outcrops (10-25%), OR',
+                'Very shallow soil (<25 cm), OR',
+                'Multiple moderate limitations'
+            ],
+            'implications': 'Operation timing critical but difficult. Timeliness rarely achieved. High operating costs. Specialized equipment essential. Very limited crop options. Intensive erosion control needed. Very intensive management required. May not be economically viable.'
+        },
+        'very_low': {
+            'range': (0, 19),
+            'title': 'Very Poor Workability',
+            'characteristics': [
+                'Very heavy clay (sodic), OR',
+                'Very steep slopes (>30%), OR',
+                'Extremely stony (>50% surface), OR',
+                'Very poorly drained (<30 working days/year), OR',
+                'Rock outcrop dominant (>25%), OR',
+                'Multiple severe limitations'
+            ],
+            'implications': 'Conventional mechanized agriculture not viable. Hand labor only option for cultivation. Extreme costs if operations attempted. Very limited crop options (perennials, pasture). Not economically viable for annual crops. Consider forestry, pasture, or conservation uses.'
+        }
     }
 }
 
@@ -543,17 +613,25 @@ DETAILED_MANAGEMENT_STRATEGIES = {
     },
     'SQ7': {
         'medium': [
-            'Time all tillage when soil moisture is optimal (friable condition)',
-            'Select tillage equipment appropriate for soil type',
-            'Consider reduced tillage or no-till systems to avoid workability issues',
-            'Implement controlled traffic farming to limit compaction'
+            'Time all field operations at optimal soil moisture (friable condition, not wet or too dry)',
+            'For clay soils: Work only at correct moisture; avoid working wet (causes smearing) or too dry (excessive clods)',
+            'For slopes 8-15%: Implement contour farming, strip cropping, and grass waterways; consider terracing',
+            'For stony soils: Use stone guards on implements, slower operations, avoid root crops',
+            'For limited working days: Install surface/subsurface drainage to extend working windows',
+            'Consider reduced tillage or no-till systems to reduce workability dependence',
+            'Implement controlled traffic farming with permanent wheel tracks to minimize soil disturbance',
+            'Select equipment appropriate for soil type: higher horsepower for clay, smaller equipment for slopes'
         ],
         'low': [
-            'Use specialized equipment designed for difficult soils',
-            'Implement no-till or minimum tillage exclusively',
-            'Plan all operations around very narrow workability windows',
-            'Consider permanent raised bed systems to avoid in-field tillage',
-            'May need track-type equipment for wet soils'
+            'For heavy clay: Massive organic matter additions (5-10 tons/acre annually), deep ripping when dry, permanent bed systems essential',
+            'For steep slopes 15-30%: Terracing essential for annual crops, consider perennials/forages, hand labor may be needed, equipment overturn risk high',
+            'For very stony soils 15-50%: No root crops, continuous equipment damage expected, consider pasture or forestry instead',
+            'For very limited working days <75/year: Subsurface drainage essential (expensive), select only flexible crops, perennials strongly preferred',
+            'Implement no-till or minimum tillage exclusively to reduce moisture sensitivity',
+            'Use specialized low-ground-pressure equipment or track-type equipment for wet soils',
+            'Plan all operations around very narrow workability windows, maintain equipment ready',
+            'For sodic clays: Apply gypsum (massive amounts), drainage essential, reclamation may take years',
+            'High costs relative to productivity - economic viability questionable for annual crops'
         ]
     }
 }
@@ -578,7 +656,7 @@ def get_detailed_description(sqi_code: str, score: float) -> Dict:
     Get detailed FAO GAEZ description for an SQI score.
 
     Args:
-        sqi_code: SQ1-SQ6
+        sqi_code: SQ1-SQ7
         score: Score value (0-100)
 
     Returns:

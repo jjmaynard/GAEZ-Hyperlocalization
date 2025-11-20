@@ -4,7 +4,7 @@ Interpretation framework for GAEZ soil quality indices and suitability ratings.
 This module provides logic to transform raw SQI scores into meaningful
 interpretations with detailed constraint analysis and management recommendations.
 
-Enhanced with FAO GAEZ v4 methodology detailed descriptions for SQ1-SQ6.
+Enhanced with FAO GAEZ v4 methodology detailed descriptions for SQ1-SQ7.
 """
 
 from typing import Dict, List, Optional, Tuple
@@ -185,8 +185,8 @@ def generate_sqi_description(sqi_code: str, score: float, input_level: str) -> s
     name = metadata.get('name', sqi_code)
     classification = classify_score(score)
 
-    # Try to use FAO GAEZ detailed descriptions first (SQ1-SQ6)
-    if FAO_DESCRIPTIONS_AVAILABLE and sqi_code in ['SQ1', 'SQ2', 'SQ3', 'SQ4', 'SQ5', 'SQ6']:
+    # Try to use FAO GAEZ detailed descriptions first (SQ1-SQ7)
+    if FAO_DESCRIPTIONS_AVAILABLE and sqi_code in ['SQ1', 'SQ2', 'SQ3', 'SQ4', 'SQ5', 'SQ6', 'SQ7']:
         detailed_info = get_detailed_description(sqi_code, score)
         if detailed_info:
             title = detailed_info.get('title', '')
@@ -194,7 +194,7 @@ def generate_sqi_description(sqi_code: str, score: float, input_level: str) -> s
             if title and implications:
                 return f"{title}. {implications}"
 
-    # Fallback to original descriptions for SQ7 or if FAO descriptions unavailable
+    # Fallback to original descriptions if FAO descriptions unavailable
     descriptions = {
         'SQ1': {
             SQIClassification.EXCELLENT: f"Excellent natural nutrient availability. Soil provides abundant nutrients for plant growth without amendments.",
@@ -268,8 +268,8 @@ def generate_management_options(sqi_code: str, score: float, input_level: str) -
     if score >= 80:
         return []  # No management needed for excellent scores
 
-    # Try to use FAO GAEZ enhanced management recommendations first (SQ1-SQ6)
-    if FAO_DESCRIPTIONS_AVAILABLE and sqi_code in ['SQ1', 'SQ2', 'SQ3', 'SQ4', 'SQ5', 'SQ6']:
+    # Try to use FAO GAEZ enhanced management recommendations first (SQ1-SQ7)
+    if FAO_DESCRIPTIONS_AVAILABLE and sqi_code in ['SQ1', 'SQ2', 'SQ3', 'SQ4', 'SQ5', 'SQ6', 'SQ7']:
         enhanced_options = get_enhanced_management(sqi_code, score)
         if enhanced_options:
             return enhanced_options

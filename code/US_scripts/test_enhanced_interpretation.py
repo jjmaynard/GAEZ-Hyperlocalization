@@ -25,7 +25,8 @@ def test_detailed_descriptions():
         ('SQ3', 30, 'Low'),
         ('SQ4', 95, 'Very High'),
         ('SQ5', 45, 'Medium'),
-        ('SQ6', 25, 'Low')
+        ('SQ6', 25, 'Low'),
+        ('SQ7', 70, 'High')
     ]
 
     for sqi_code, score, expected_level in test_cases:
@@ -53,7 +54,8 @@ def test_enhanced_management():
         ('SQ3', 45, 'Medium'),
         ('SQ4', 30, 'Low'),
         ('SQ5', 55, 'Medium'),
-        ('SQ6', 38, 'Low')
+        ('SQ6', 38, 'Low'),
+        ('SQ7', 42, 'Medium')
     ]
 
     for sqi_code, score, severity in test_cases:
@@ -96,7 +98,7 @@ def test_rating_coverage():
     print("TEST 4: Rating Description Coverage")
     print("="*70)
 
-    expected_sqis = ['SQ1', 'SQ2', 'SQ3', 'SQ4', 'SQ5', 'SQ6']
+    expected_sqis = ['SQ1', 'SQ2', 'SQ3', 'SQ4', 'SQ5', 'SQ6', 'SQ7']
     expected_classes = ['very_high', 'high', 'medium', 'low', 'very_low']
 
     print(f"\nChecking {len(expected_sqis)} SQIs × {len(expected_classes)} rating classes...")
