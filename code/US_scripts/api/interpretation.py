@@ -3,6 +3,8 @@ Interpretation framework for GAEZ soil quality indices and suitability ratings.
 
 This module provides logic to transform raw SQI scores into meaningful
 interpretations with detailed constraint analysis and management recommendations.
+
+Enhanced with FAO GAEZ v4 methodology detailed descriptions for SQ1-SQ6.
 """
 
 from typing import Dict, List, Optional, Tuple
@@ -18,6 +20,18 @@ from .models import (
     SoilSuitabilityInterpretation,
     InterpretationResponse
 )
+
+# Import FAO GAEZ detailed descriptions
+try:
+    from .fao_gaez_descriptions import (
+        get_detailed_description,
+        get_enhanced_management,
+        check_crop_tolerance,
+        get_rating_class
+    )
+    FAO_DESCRIPTIONS_AVAILABLE = True
+except ImportError:
+    FAO_DESCRIPTIONS_AVAILABLE = False
 
 
 # =============================================================================
@@ -157,6 +171,8 @@ def generate_sqi_description(sqi_code: str, score: float, input_level: str) -> s
     """
     Generate a human-readable description for an SQI score.
 
+    Enhanced to use FAO GAEZ v4 detailed descriptions when available.
+
     Args:
         sqi_code: SQI code (SQ1-SQ7)
         score: SQI score (0-100)
@@ -169,7 +185,16 @@ def generate_sqi_description(sqi_code: str, score: float, input_level: str) -> s
     name = metadata.get('name', sqi_code)
     classification = classify_score(score)
 
-    # Base descriptions by classification
+    # Try to use FAO GAEZ detailed descriptions first (SQ1-SQ6)
+    if FAO_DESCRIPTIONS_AVAILABLE and sqi_code in ['SQ1', 'SQ2', 'SQ3', 'SQ4', 'SQ5', 'SQ6']:
+        detailed_info = get_detailed_description(sqi_code, score)
+        if detailed_info:
+            title = detailed_info.get('title', '')
+            implications = detailed_info.get('implications', '')
+            if title and implications:
+                return f"{title}. {implications}"
+
+    # Fallback to original descriptions for SQ7 or if FAO descriptions unavailable
     descriptions = {
         'SQ1': {
             SQIClassification.EXCELLENT: f"Excellent natural nutrient availability. Soil provides abundant nutrients for plant growth without amendments.",
@@ -207,11 +232,11 @@ def generate_sqi_description(sqi_code: str, score: float, input_level: str) -> s
             SQIClassification.VERY_POOR: f"Severe salt problems. Very high salinity or sodicity severely limits agricultural use."
         },
         'SQ6': {
-            SQIClassification.EXCELLENT: f"No calcium carbonate or gypsum limitations. Optimal conditions for most crops.",
-            SQIClassification.GOOD: f"Minor calcium carbonate or gypsum presence. Slight impact on nutrient availability.",
-            SQIClassification.MODERATE: f"Moderate calcium carbonate or gypsum levels. May affect nutrient availability and soil structure.",
-            SQIClassification.POOR: f"High calcium carbonate or gypsum content. Causes nutrient deficiencies and structural issues.",
-            SQIClassification.VERY_POOR: f"Very high calcium carbonate or gypsum. Severe limitations from nutrient lockup and soil instability."
+            SQIClassification.EXCELLENT: f"No toxicity limitations. Optimal soil chemistry for most crops.",
+            SQIClassification.GOOD: f"Minor toxicity concerns. Slight pH extremes or trace element imbalances with minimal crop impact.",
+            SQIClassification.MODERATE: f"Moderate toxicity problems. Aluminum, lime excess, or other chemical constraints affect sensitive crops.",
+            SQIClassification.POOR: f"Significant toxicity. High aluminum, extreme lime, or heavy metals restrict crop options significantly.",
+            SQIClassification.VERY_POOR: f"Severe toxicity. Extreme chemical limitations severely constrain agricultural use."
         },
         'SQ7': {
             SQIClassification.EXCELLENT: f"Excellent workability. Easy to till with wide operational window.",
@@ -230,6 +255,8 @@ def generate_management_options(sqi_code: str, score: float, input_level: str) -
     """
     Generate management recommendations for a specific SQI.
 
+    Enhanced to use FAO GAEZ v4 detailed management strategies when available.
+
     Args:
         sqi_code: SQI code (SQ1-SQ7)
         score: SQI score (0-100)
@@ -241,6 +268,13 @@ def generate_management_options(sqi_code: str, score: float, input_level: str) -
     if score >= 80:
         return []  # No management needed for excellent scores
 
+    # Try to use FAO GAEZ enhanced management recommendations first (SQ1-SQ6)
+    if FAO_DESCRIPTIONS_AVAILABLE and sqi_code in ['SQ1', 'SQ2', 'SQ3', 'SQ4', 'SQ5', 'SQ6']:
+        enhanced_options = get_enhanced_management(sqi_code, score)
+        if enhanced_options:
+            return enhanced_options
+
+    # Fallback to original recommendations
     options = {
         'SQ1': {
             'moderate': [
@@ -603,6 +637,8 @@ def generate_crop_specific_notes(
     """
     Generate notes specific to the selected crop.
 
+    Enhanced to include FAO GAEZ crop tolerance information.
+
     Args:
         crop_id: GAEZ crop identifier
         crop_name: Crop common name
@@ -614,7 +650,45 @@ def generate_crop_specific_notes(
     """
     notes = []
 
-    # Notes based on crop categories
+    # Use FAO GAEZ crop tolerance data if available
+    if FAO_DESCRIPTIONS_AVAILABLE:
+        # Check aluminum tolerance (for acidic soils with low SQ6)
+        if scores.get('SQ6', 100) < 60:
+            tolerance_level, tolerance_desc = check_crop_tolerance(crop_name, 'aluminum')
+            if tolerance_level in ['very_sensitive', 'moderately_sensitive']:
+                notes.append(f"{tolerance_desc}. Liming may be essential for acceptable yields.")
+            elif tolerance_level == 'tolerant':
+                notes.append(f"{tolerance_desc}, making it suitable for acidic soils without intensive liming.")
+
+        # Check lime tolerance (for alkaline/calcareous soils with low SQ6)
+        if scores.get('SQ6', 100) < 60:  # Could be either acidic or alkaline
+            tolerance_level, tolerance_desc = check_crop_tolerance(crop_name, 'lime')
+            if tolerance_level in ['very_sensitive', 'sensitive']:
+                notes.append(f"{tolerance_desc}. Iron chlorosis likely on calcareous soils; Fe chelates may be needed.")
+
+        # Check salinity tolerance (for salt-affected soils with low SQ5)
+        if scores.get('SQ5', 100) < 60:
+            tolerance_level, tolerance_desc = check_crop_tolerance(crop_name, 'salinity')
+            if tolerance_level == 'sensitive':
+                notes.append(f"{tolerance_desc}. Salt management critical for this crop; consider alternatives.")
+            elif tolerance_level in ['moderately_tolerant', 'tolerant']:
+                notes.append(f"{tolerance_desc}, making it a good choice for moderately saline conditions.")
+
+        # Check waterlogging tolerance (for poorly drained soils with low SQ4)
+        if scores.get('SQ4', 100) < 60:
+            tolerance_level, tolerance_desc = check_crop_tolerance(crop_name, 'drainage')
+            if tolerance_level in ['very_sensitive', 'moderately_sensitive']:
+                notes.append(f"{tolerance_desc}. Drainage improvement essential for this crop.")
+            elif tolerance_level == 'tolerant':
+                notes.append(f"{tolerance_desc}, making it suitable for poorly drained soils.")
+
+        # Check manganese toxicity tolerance (for acid, poorly drained soils)
+        if scores.get('SQ6', 100) < 60 and scores.get('SQ4', 100) < 60:
+            tolerance_level, tolerance_desc = check_crop_tolerance(crop_name, 'manganese')
+            if tolerance_level == 'sensitive':
+                notes.append(f"{tolerance_desc}. Combined acidity and poor drainage increase Mn toxicity risk.")
+
+    # Fallback to original category-based notes
     root_crops = ['9', '10', '11', '47', '48']  # Potato, Sweet Potato, Cassava, Yam, Taro
     if crop_id in root_crops:
         if scores.get('SQ3', 100) < 60:
@@ -625,13 +699,13 @@ def generate_crop_specific_notes(
 
     cereals = ['1', '2', '3', '4', '5', '6', '7', '8', '38', '39', '40', '41', '49']
     if crop_id in cereals:
-        if scores.get('SQ4', 100) < 60:
+        if scores.get('SQ4', 100) < 60 and not any('waterlogging' in note.lower() for note in notes):
             notes.append(f"Cereals like {crop_name} are sensitive to waterlogging during establishment "
                         "and grain filling.")
 
     legumes = ['15a', '15b', '16', '17', '18', '19']
     if crop_id in legumes:
-        if scores.get('SQ5', 100) < 60:
+        if scores.get('SQ5', 100) < 60 and not any('salin' in note.lower() for note in notes):
             notes.append(f"Legumes like {crop_name} are moderately sensitive to salinity. "
                         "Consider salt-tolerant varieties.")
 
