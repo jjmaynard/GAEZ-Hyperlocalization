@@ -1,0 +1,63 @@
+# Vercel ignore patterns - files and directories to exclude from deployment
+
+# R specific files
+*.Rproj
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rmd
+*.nb.html
+*.knit.md
+
+# Data directories (usually too large for Vercel)
+data/
+results/
+
+# Documentation
+docs/
+site/
+
+# Project setup
+project_setup/
+
+# Git
+.git/
+.gitignore
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.ipynb
+
+# Documentation
+*.md
+!code/US_scripts/api/README.md
+!code/US_scripts/api/QUICKSTART.md
+
+# Docker
+Dockerfile
+.dockerignore
+
+# R notebook outputs
+code/Ghana_code/*.nb.html
+code/*.nb.html
